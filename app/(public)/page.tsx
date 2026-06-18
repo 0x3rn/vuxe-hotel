@@ -134,7 +134,7 @@ export default function HomePage() {
                 <p className="text-xs tracking-widest text-zinc-400 uppercase mb-4">120 sq.m | Up to 4 Guests</p>
                 <p className="text-zinc-500 text-sm mb-6 flex-1">An opulent sanctuary suspended in the sky. Featuring panoramic city and ocean views, a private infinity plunge pool, and a dedicated 24-hour butler.</p>
                 <p className="text-primary font-medium mb-6">From $2,500 / night</p>
-                <Link href="/rooms" className="border border-zinc-300 text-zinc-700 px-6 py-2 rounded uppercase text-xs tracking-widest hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-colors w-full md:w-auto h-12 md:h-auto flex items-center justify-center">
+                <Link href="/rooms/presidential-penthouse" className="border border-zinc-300 text-zinc-700 px-6 py-2 rounded uppercase text-xs tracking-widest hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-colors w-full md:w-auto h-12 md:h-auto flex items-center justify-center">
                   Discover More
                 </Link>
               </div>
@@ -150,7 +150,7 @@ export default function HomePage() {
                 <p className="text-xs tracking-widest text-zinc-400 uppercase mb-4">90 sq.m | Up to 2 Guests</p>
                 <p className="text-zinc-500 text-sm mb-6 flex-1">Awaken to the gentle sound of waves and breathtaking azure horizons. This expansive suite offers a private wraparound balcony and deep soaking tub.</p>
                 <p className="text-primary font-medium mb-6">From $1,200 / night</p>
-                <Link href="/rooms" className="border border-zinc-300 text-zinc-700 px-6 py-2 rounded uppercase text-xs tracking-widest hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-colors w-full md:w-auto h-12 md:h-auto flex items-center justify-center">
+                <Link href="/rooms/ocean-view-villa" className="border border-zinc-300 text-zinc-700 px-6 py-2 rounded uppercase text-xs tracking-widest hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-colors w-full md:w-auto h-12 md:h-auto flex items-center justify-center">
                   Discover More
                 </Link>
               </div>
@@ -166,7 +166,7 @@ export default function HomePage() {
                 <p className="text-xs tracking-widest text-zinc-400 uppercase mb-4">150 sq.m | Up to 6 Guests</p>
                 <p className="text-zinc-500 text-sm mb-6 flex-1">A secluded haven designed for ultimate privacy and exclusivity. Nestled in lush tropical gardens with a private courtyard and heated pool.</p>
                 <p className="text-primary font-medium mb-6">From $1,800 / night</p>
-                <Link href="/rooms" className="border border-zinc-300 text-zinc-700 px-6 py-2 rounded uppercase text-xs tracking-widest hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-colors w-full md:w-auto h-12 md:h-auto flex items-center justify-center">
+                <Link href="/rooms/royal-suite" className="border border-zinc-300 text-zinc-700 px-6 py-2 rounded uppercase text-xs tracking-widest hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-colors w-full md:w-auto h-12 md:h-auto flex items-center justify-center">
                   Discover More
                 </Link>
               </div>

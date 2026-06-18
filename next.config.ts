@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'placehold.co',
+        hostname: 'firebasestorage.googleapis.com',
       }
     ],
   },
