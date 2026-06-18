@@ -19,6 +19,47 @@ type Booking = {
   createdAt?: any;
 };
 
+const CountdownBadge = ({ createdAt }: { createdAt: any }) => {
+  const [timeLeft, setTimeLeft] = useState<string>('Calculating...');
+  const [expired, setExpired] = useState(false);
+
+  useEffect(() => {
+    if (!createdAt) {
+      setTimeLeft('N/A');
+      return;
+    }
+    
+    // Convert Firestore Timestamp to JS Date
+    const createdDate = createdAt?.toDate ? createdAt.toDate() : new Date(createdAt);
+    const expireDate = new Date(createdDate.getTime() + 24 * 60 * 60 * 1000);
+
+    const updateTimer = () => {
+      const now = new Date();
+      const diff = expireDate.getTime() - now.getTime();
+      
+      if (diff <= 0) {
+        setExpired(true);
+        setTimeLeft('Expired');
+      } else {
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeLeft(`${h}h ${m}m ${s}s`);
+      }
+    };
+
+    updateTimer(); // Initial call
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  if (expired) {
+    return <span className="text-xs bg-red-50 text-red-800 px-2 py-1 rounded font-medium border border-red-200 shadow-sm">⚠️ Expired</span>;
+  }
+  return <span className="text-xs bg-amber-50 text-amber-800 px-2 py-1 rounded font-medium border border-amber-200 shadow-sm tracking-wide">⏳ {timeLeft}</span>;
+};
+
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +149,7 @@ export default function AdminBookingsPage() {
                   <td className="py-4 px-6 text-gray-900 font-medium">
                     ${booking.totalPrice}
                   </td>
-                  <td className="py-4 px-6">
+                  <td className="py-4 px-6 flex flex-col items-start gap-2">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
                       booking.status === 'Confirmed' ? 'bg-green-100 text-green-800' :
                       booking.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
@@ -116,6 +157,9 @@ export default function AdminBookingsPage() {
                     }`}>
                       {booking.status}
                     </span>
+                    {booking.status === 'Pending' && booking.createdAt && (
+                      <CountdownBadge createdAt={booking.createdAt} />
+                    )}
                   </td>
                   <td className="py-4 px-6 text-right space-x-2">
                     {booking.status === 'Pending' && (

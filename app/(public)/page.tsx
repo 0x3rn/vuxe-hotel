@@ -1,9 +1,19 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+type Amenity = {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  order: number;
+};
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 40 },
@@ -21,6 +31,26 @@ const staggerContainer: Variants = {
 };
 
 export default function HomePage() {
+  const [amenities, setAmenities] = useState<Amenity[]>([]);
+
+  useEffect(() => {
+    const fetchAmenities = async () => {
+      try {
+        const q = query(collection(db, "amenities"), orderBy("order", "asc"));
+        const querySnapshot = await getDocs(q);
+        const amenitiesData: Amenity[] = [];
+        querySnapshot.forEach((doc) => {
+          amenitiesData.push({ id: doc.id, ...doc.data() } as Amenity);
+        });
+        setAmenities(amenitiesData);
+      } catch (error) {
+        console.error("Error fetching amenities:", error);
+      }
+    };
+
+    fetchAmenities();
+  }, []);
+
   return (
     <div className="flex flex-col w-full overflow-hidden">
       {/* Hero Section */}
@@ -172,6 +202,67 @@ export default function HomePage() {
               </div>
             </motion.div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Bespoke Experiences */}
+      <section className="py-16 md:py-24 lg:py-32 bg-stone-50 border-y border-zinc-100">
+        <div className="container mx-auto px-6">
+          <motion.div 
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+            variants={fadeInUp}
+            className="text-center mb-16"
+          >
+            <h2 className="text-sm uppercase tracking-widest text-primary mb-4 font-medium">Bespoke Experiences</h2>
+            <h3 className="text-3xl md:text-5xl font-serif text-zinc-900 mb-8">The Pinnacle of Elegance</h3>
+          </motion.div>
+
+          <div className="space-y-24">
+            {amenities.map((amenity, index) => {
+              const isEven = index % 2 === 0;
+              return (
+                <div key={amenity.id} className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-10 lg:gap-16`}>
+                  <motion.div 
+                    initial={{ opacity: 0, x: isEven ? -50 : 50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full lg:w-1/2"
+                  >
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl relative">
+                      <Image src={amenity.imageUrl} alt={amenity.title} fill className="object-cover hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 50vw" />
+                    </div>
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0, x: isEven ? 50 : -50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8 }}
+                    className={`w-full lg:w-1/2 space-y-6 text-center lg:text-left ${!isEven ? 'lg:pl-12' : ''}`}
+                  >
+                    <h4 className="text-3xl md:text-4xl font-serif text-zinc-900">{amenity.title}</h4>
+                    <p className="text-zinc-500 leading-relaxed text-base md:text-lg">
+                      {amenity.description}
+                    </p>
+                    {amenity.title.toLowerCase().includes('chauffeur') && (
+                      <div className="pt-2">
+                        <Link href="#" onClick={(e) => { e.preventDefault(); alert('Transport booking modal coming soon!'); }} className="border border-zinc-300 text-zinc-700 px-8 py-3 rounded uppercase text-sm tracking-widest font-semibold hover:bg-zinc-900 hover:text-white transition-colors inline-block">
+                          Book Transport
+                        </Link>
+                      </div>
+                    )}
+                  </motion.div>
+                </div>
+              );
+            })}
+            {amenities.length === 0 && (
+              <div className="flex justify-center items-center h-32">
+                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

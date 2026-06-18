@@ -35,6 +35,7 @@ export default function RoomsPage() {
         querySnapshot.forEach((doc) => {
           roomsData.push({ id: doc.id, ...doc.data() } as Room);
         });
+        roomsData.sort((a, b) => a.name.localeCompare(b.name));
         setRooms(roomsData);
       } catch (error) {
         console.error("Error fetching rooms:", error);

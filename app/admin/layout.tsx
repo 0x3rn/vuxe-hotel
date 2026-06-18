@@ -42,9 +42,17 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           <Link href="/admin/bookings" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/bookings' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Bookings
           </Link>
+          <Link href="/admin/amenities" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/amenities' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
+            Amenities
+          </Link>
           <Link href="/admin/seed" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/seed' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Database Seed
           </Link>
+          <div className="pt-4 mt-4 border-t border-secondary-foreground/10">
+            <Link href="/" className="block px-4 py-2 rounded transition-colors hover:bg-secondary-foreground/10 text-zinc-300">
+              View Main Site
+            </Link>
+          </div>
         </nav>
         <div className="p-4 border-t border-secondary-foreground/20">
           <div className="text-xs text-secondary-foreground/50 mb-4 px-2 break-words">

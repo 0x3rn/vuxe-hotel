@@ -46,6 +46,7 @@ export default function AdminRoomsPage() {
       querySnapshot.forEach((doc) => {
         roomsData.push({ id: doc.id, ...doc.data() } as Room);
       });
+      roomsData.sort((a, b) => a.name.localeCompare(b.name));
       setRooms(roomsData);
     } catch (error) {
       console.error("Error fetching rooms:", error);
@@ -221,15 +222,15 @@ export default function AdminRoomsPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Price/Night ($)</label>
-                  <input type="number" required value={formData.pricePerNight} onChange={e => setFormData({...formData, pricePerNight: Number(e.target.value)})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" />
+                  <input type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()} required value={formData.pricePerNight} onChange={e => setFormData({...formData, pricePerNight: Number(e.target.value)})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
-                  <input type="number" required value={formData.capacity} onChange={e => setFormData({...formData, capacity: Number(e.target.value)})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" />
+                  <input type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()} required value={formData.capacity} onChange={e => setFormData({...formData, capacity: Number(e.target.value)})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Inventory</label>
-                  <input type="number" required value={formData.inventory} onChange={e => setFormData({...formData, inventory: Number(e.target.value)})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" />
+                  <input type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()} required value={formData.inventory} onChange={e => setFormData({...formData, inventory: Number(e.target.value)})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" />
                 </div>
               </div>
               <div>

@@ -49,7 +49,19 @@ export default function RoomDetailPage() {
         setLoading(false);
       }
     };
-    if (id) fetchRoom();
+
+    const cleanupExpiredBookings = async () => {
+      try {
+        await fetch(`/api/cron/auto-cancel?roomId=${id}`);
+      } catch (error) {
+        console.error("Error running auto-cancel cleanup:", error);
+      }
+    };
+
+    if (id) {
+      fetchRoom();
+      cleanupExpiredBookings();
+    }
   }, [id]);
 
   const calculateTotal = () => {
