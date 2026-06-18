@@ -80,7 +80,7 @@ export default function SeedPage() {
         addLog(`Successfully added room: ${room.name}`);
       }
       
-      addLog("Database seeding complete! ✨");
+      addLog("Database seeding complete!");
       setSuccess(true);
     } catch (error: any) {
       addLog(`Error: ${error.message || "Unknown error occurred"}`);

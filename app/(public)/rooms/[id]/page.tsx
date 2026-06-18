@@ -80,6 +80,30 @@ export default function RoomDetailPage() {
       };
       
       await addDoc(collection(db, "bookings"), bookingData);
+      
+      // Trigger Firebase Email Extension by writing to the 'mail' collection
+      await addDoc(collection(db, "mail"), {
+        to: email,
+        message: {
+          subject: "Your Luxe Hotel Reservation Request",
+          html: `
+            <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
+              <h1 style="color: #111; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Luxe Hotel</h1>
+              <p>Dear ${guestName},</p>
+              <p>Thank you for requesting to stay with us. We have successfully received your reservation request for the <strong>${room.name}</strong>.</p>
+              <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                <p style="margin: 5px 0;"><strong>Check-in:</strong> ${checkIn}</p>
+                <p style="margin: 5px 0;"><strong>Check-out:</strong> ${checkOut}</p>
+                <p style="margin: 5px 0;"><strong>Estimated Total:</strong> $${calculateTotal().toLocaleString()}</p>
+              </div>
+              <p>Our concierge team is reviewing your request and will contact you shortly to confirm your booking.</p>
+              <br/>
+              <p>Warm regards,<br/><strong>The Luxe Team</strong></p>
+            </div>
+          `
+        }
+      });
+
       setBookingSuccess(true);
     } catch (error) {
       console.error("Error creating booking:", error);
