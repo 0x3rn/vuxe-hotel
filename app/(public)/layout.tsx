@@ -1,28 +1,56 @@
-import React from 'react';
+"use client";
+
+import React, { useState } from 'react';
+import { Menu, X } from 'lucide-react';
+import Link from 'next/link';
 
 export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <>
-      <header className="fixed w-full top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="text-2xl font-serif font-bold text-primary tracking-wider">
-            LUXE
+      <header className="fixed w-full top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
+        <div className="container mx-auto px-4 py-4 md:px-8 md:py-6 flex items-center justify-between">
+          <div className="text-2xl font-serif font-bold text-primary tracking-wider z-50 relative">
+            <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>LUXE</Link>
           </div>
-          <nav className="hidden md:flex gap-8 text-sm font-medium tracking-wide">
-            <a href="/" className="hover:text-primary transition-colors">HOME</a>
-            <a href="/rooms" className="hover:text-primary transition-colors">SUITES</a>
-            <a href="#amenities" className="hover:text-primary transition-colors">AMENITIES</a>
+          
+          {/* Desktop Nav */}
+          <nav className="hidden md:flex gap-8 text-sm font-medium tracking-wide items-center">
+            <Link href="/" className="hover:text-primary transition-colors">HOME</Link>
+            <Link href="/rooms" className="hover:text-primary transition-colors">SUITES</Link>
+            <Link href="#amenities" className="hover:text-primary transition-colors">AMENITIES</Link>
+            <Link href="/rooms" className="bg-primary text-primary-foreground px-6 py-3 rounded uppercase text-sm tracking-wider font-semibold hover:bg-primary/90 transition-colors ml-4">
+              Book Now
+            </Link>
           </nav>
-          <a href="/rooms" className="bg-primary text-primary-foreground px-6 py-2 rounded uppercase text-sm tracking-wider font-semibold hover:bg-primary/90 transition-colors">
-            Book Now
-          </a>
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="md:hidden z-50 relative text-foreground"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
         </div>
+
+        {/* Mobile Nav Overlay */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden fixed inset-0 bg-background flex flex-col items-center justify-center space-y-8 z-40 h-screen">
+            <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">HOME</Link>
+            <Link href="/rooms" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">SUITES</Link>
+            <Link href="#amenities" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">AMENITIES</Link>
+            <Link href="/rooms" onClick={() => setIsMobileMenuOpen(false)} className="bg-primary text-primary-foreground px-8 py-4 rounded uppercase text-lg tracking-wider font-semibold hover:bg-primary/90 transition-colors mt-8">
+              Book Now
+            </Link>
+          </div>
+        )}
       </header>
-      <main className="flex-1 pt-20">
+      <main className="flex-1">
         {children}
       </main>
       <footer className="bg-zinc-950 text-zinc-300 py-16 mt-auto">
@@ -45,7 +73,7 @@ export default function PublicLayout({
             <div>
               <h3 className="text-white font-medium uppercase tracking-wider text-sm mb-6">Quick Links</h3>
               <ul className="space-y-3 text-sm text-zinc-400">
-                <li><a href="/rooms" className="hover:text-primary transition-colors">Our Suites</a></li>
+                <li><Link href="/rooms" className="hover:text-primary transition-colors">Our Suites</Link></li>
                 <li><a href="#dining" className="hover:text-primary transition-colors">Dining</a></li>
                 <li><a href="#spa" className="hover:text-primary transition-colors">Spa & Wellness</a></li>
                 <li><a href="#offers" className="hover:text-primary transition-colors">Special Offers</a></li>
@@ -71,11 +99,11 @@ export default function PublicLayout({
                 <input 
                   type="email" 
                   placeholder="Your email address" 
-                  className="bg-zinc-900 border border-zinc-800 text-white px-4 py-2 rounded focus:outline-none focus:border-primary text-sm"
+                  className="bg-zinc-900 border border-zinc-800 text-white px-4 py-3 md:py-2 rounded focus:outline-none focus:border-primary text-sm h-12 md:h-auto"
                 />
                 <button 
                   type="submit" 
-                  className="bg-primary text-primary-foreground px-4 py-2 rounded uppercase text-sm tracking-wider font-semibold hover:bg-primary/90 transition-colors"
+                  className="bg-primary text-primary-foreground px-4 py-3 md:py-2 rounded uppercase text-sm tracking-wider font-semibold hover:bg-primary/90 transition-colors h-12 md:h-auto"
                 >
                   Subscribe
                 </button>

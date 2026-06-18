@@ -46,7 +46,7 @@ export default function RoomsPage() {
   }, []);
 
   return (
-    <div className="bg-stone-50 min-h-screen pt-12 pb-24">
+    <div className="bg-stone-50 min-h-screen pt-32 md:pt-40 pb-24">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h1 className="text-5xl font-serif text-zinc-900 mb-4">Our Suites & Villas</h1>
