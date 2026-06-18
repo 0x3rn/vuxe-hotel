@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 40 },
@@ -24,11 +25,16 @@ export default function HomePage() {
     <div className="flex flex-col w-full overflow-hidden">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] w-full flex flex-col items-center justify-center bg-stone-50 pt-24 pb-16 lg:py-0">
-        <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1920&q=80')" }}
-        >
-          <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 z-0">
+          <Image 
+            src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1920&q=80"
+            alt="Hero Background"
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-black/50 z-10" />
         </div>
         
         <motion.div 
@@ -121,7 +127,7 @@ export default function HomePage() {
             {/* Suite 1 */}
             <motion.div variants={fadeInUp} className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col">
               <div className="h-72 overflow-hidden relative shrink-0">
-                <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80" alt="Presidential Penthouse" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <Image src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80" alt="Presidential Penthouse" fill className="object-cover group-hover:scale-105 transition-transform duration-700" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-8 text-center border border-t-0 border-zinc-100 flex flex-col flex-1">
                 <h4 className="text-2xl font-serif text-zinc-900 mb-2">The Presidential Penthouse</h4>
@@ -137,7 +143,7 @@ export default function HomePage() {
             {/* Suite 2 */}
             <motion.div variants={fadeInUp} className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col">
               <div className="h-72 overflow-hidden relative shrink-0">
-                <img src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80" alt="Ocean View Villa" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <Image src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80" alt="Ocean View Villa" fill className="object-cover group-hover:scale-105 transition-transform duration-700" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-8 text-center border border-t-0 border-zinc-100 flex flex-col flex-1">
                 <h4 className="text-2xl font-serif text-zinc-900 mb-2">Ocean View Villa</h4>
@@ -153,7 +159,7 @@ export default function HomePage() {
             {/* Suite 3 */}
             <motion.div variants={fadeInUp} className="group bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 flex flex-col">
               <div className="h-72 overflow-hidden relative shrink-0">
-                <img src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80" alt="Royal Suite" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                <Image src="https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80" alt="Royal Suite" fill className="object-cover group-hover:scale-105 transition-transform duration-700" sizes="(max-width: 768px) 100vw, 33vw" />
               </div>
               <div className="p-8 text-center border border-t-0 border-zinc-100 flex flex-col flex-1">
                 <h4 className="text-2xl font-serif text-zinc-900 mb-2">The Royal Suite</h4>
@@ -193,8 +199,8 @@ export default function HomePage() {
                 transition={{ duration: 0.8 }}
                 className="w-full lg:w-1/2"
               >
-                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl">
-                  <img src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80" alt="Michelin-Star Dining" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl relative">
+                  <Image src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80" alt="Michelin-Star Dining" fill className="object-cover hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 50vw" />
                 </div>
               </motion.div>
               <motion.div 
@@ -223,8 +229,8 @@ export default function HomePage() {
                 transition={{ duration: 0.8 }}
                 className="w-full lg:w-1/2"
               >
-                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl">
-                  <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1000&q=80" alt="Award-Winning Spa" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl relative">
+                  <Image src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1000&q=80" alt="Award-Winning Spa" fill className="object-cover hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 50vw" />
                 </div>
               </motion.div>
               <motion.div 
@@ -253,8 +259,8 @@ export default function HomePage() {
                 transition={{ duration: 0.8 }}
                 className="w-full lg:w-1/2"
               >
-                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl">
-                  <img src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80" alt="Private Chauffeur & Heli-pad" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl relative">
+                  <Image src="https://images.unsplash.com/photo-1631262562473-b3bc7f92b7eb?auto=format&fit=crop&w=800&q=80" alt="Private Chauffeur & Heli-pad" fill className="object-cover hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 50vw" />
                 </div>
               </motion.div>
               <motion.div 
