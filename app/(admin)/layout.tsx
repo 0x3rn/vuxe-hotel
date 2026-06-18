@@ -1,10 +1,30 @@
-import React from 'react';
+"use client";
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+import React from 'react';
+import { usePathname } from 'next/navigation';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
+
+function AdminShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const { user, loading, logout } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // If we are on the login page, don't show the sidebar
+  if (pathname === '/admin/login') {
+    return <>{children}</>;
+  }
+
+  // If not logged in, AuthContext will handle the redirect, just return null here
+  if (!user) return null;
+
   return (
     <div className="flex h-screen bg-gray-50 text-gray-900 font-sans">
       {/* Sidebar */}
@@ -13,18 +33,24 @@ export default function AdminLayout({
           Luxe Admin
         </div>
         <nav className="flex-1 p-4 space-y-2">
-          <a href="/admin/dashboard" className="block px-4 py-2 rounded hover:bg-secondary-foreground/10 transition-colors">
+          <Link href="/admin/dashboard" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/dashboard' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Dashboard
-          </a>
-          <a href="/admin/rooms" className="block px-4 py-2 rounded hover:bg-secondary-foreground/10 transition-colors">
+          </Link>
+          <Link href="/admin/rooms" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/rooms' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Rooms
-          </a>
-          <a href="/admin/bookings" className="block px-4 py-2 rounded hover:bg-secondary-foreground/10 transition-colors">
+          </Link>
+          <Link href="/admin/bookings" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/bookings' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Bookings
-          </a>
+          </Link>
         </nav>
         <div className="p-4 border-t border-secondary-foreground/20">
-          <button className="w-full bg-red-900/50 hover:bg-red-900 text-white px-4 py-2 rounded transition-colors">
+          <div className="text-xs text-secondary-foreground/50 mb-4 px-2 break-words">
+            {user.email}
+          </div>
+          <button 
+            onClick={logout}
+            className="w-full bg-red-900/50 hover:bg-red-900 text-white px-4 py-2 rounded transition-colors"
+          >
             Logout
           </button>
         </div>
@@ -35,5 +61,13 @@ export default function AdminLayout({
         {children}
       </main>
     </div>
+  );
+}
+
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <AdminShell>{children}</AdminShell>
+    </AuthProvider>
   );
 }
