@@ -23,7 +23,7 @@ export default function PublicLayout({
           <nav className="hidden md:flex gap-8 text-sm font-medium tracking-wide items-center">
             <Link href="/" className="hover:text-primary transition-colors">HOME</Link>
             <Link href="/rooms" className="hover:text-primary transition-colors">SUITES</Link>
-            <Link href="#amenities" className="hover:text-primary transition-colors">AMENITIES</Link>
+            <Link href="/amenities" className="hover:text-primary transition-colors">AMENITIES</Link>
             <Link href="/rooms" className="bg-primary text-primary-foreground px-6 py-3 rounded uppercase text-sm tracking-wider font-semibold hover:bg-primary/90 transition-colors ml-4">
               Book Now
             </Link>
@@ -43,7 +43,7 @@ export default function PublicLayout({
           <div className="md:hidden fixed inset-0 bg-background flex flex-col items-center justify-center space-y-8 z-40 h-screen">
             <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">HOME</Link>
             <Link href="/rooms" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">SUITES</Link>
-            <Link href="#amenities" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">AMENITIES</Link>
+            <Link href="/amenities" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">AMENITIES</Link>
             <Link href="/rooms" onClick={() => setIsMobileMenuOpen(false)} className="bg-primary text-primary-foreground px-8 py-4 rounded uppercase text-lg tracking-wider font-semibold hover:bg-primary/90 transition-colors mt-8">
               Book Now
             </Link>
