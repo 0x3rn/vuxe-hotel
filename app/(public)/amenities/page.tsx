@@ -1,8 +1,18 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import Image from 'next/image';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+type Amenity = {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  order: number;
+};
 
 const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 40 },
@@ -10,6 +20,29 @@ const fadeInUp: Variants = {
 };
 
 export default function AmenitiesPage() {
+  const [amenities, setAmenities] = useState<Amenity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAmenities = async () => {
+      try {
+        const q = query(collection(db, "amenities"), orderBy("order", "asc"));
+        const querySnapshot = await getDocs(q);
+        const amenitiesData: Amenity[] = [];
+        querySnapshot.forEach((doc) => {
+          amenitiesData.push({ id: doc.id, ...doc.data() } as Amenity);
+        });
+        setAmenities(amenitiesData);
+      } catch (error) {
+        console.error("Error fetching amenities:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAmenities();
+  }, []);
+
   return (
     <div className="bg-stone-50 min-h-screen pt-32 md:pt-40 pb-24">
       <div className="container mx-auto px-6">
@@ -20,89 +53,45 @@ export default function AmenitiesPage() {
           </p>
         </div>
 
-          <div className="space-y-24 md:space-y-32">
-            {/* Row 1 */}
-            <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-              <motion.div 
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8 }}
-                className="w-full lg:w-1/2"
-              >
-                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl relative">
-                  <Image src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80" alt="Michelin-Star Dining" fill className="object-cover hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 50vw" />
-                </div>
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8 }}
-                className="w-full lg:w-1/2 space-y-6 text-center lg:text-left"
-              >
-                <h4 className="text-3xl md:text-4xl font-serif text-zinc-900">Michelin-Star Dining</h4>
-                <p className="text-zinc-500 leading-relaxed text-base md:text-lg">
-                  Embark on a culinary journey orchestrated by our world-renowned executive chefs. Savor exquisite dishes crafted from locally sourced, seasonal ingredients, perfectly paired with selections from our award-winning wine cellar.
-                </p>
-              </motion.div>
-            </div>
-
-            {/* Row 2 */}
-            <div className="flex flex-col lg:flex-row-reverse items-center gap-10 lg:gap-16">
-              <motion.div 
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8 }}
-                className="w-full lg:w-1/2"
-              >
-                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl relative">
-                  <Image src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1000&q=80" alt="Award-Winning Spa" fill className="object-cover hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 50vw" />
-                </div>
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8 }}
-                className="w-full lg:w-1/2 space-y-6 text-center lg:text-left lg:pl-12"
-              >
-                <h4 className="text-3xl md:text-4xl font-serif text-zinc-900">Award-Winning Spa & Wellness</h4>
-                <p className="text-zinc-500 leading-relaxed text-base md:text-lg">
-                  Restore balance to your mind, body, and spirit in our holistic wellness sanctuary. Experience personalized treatments drawing upon ancient traditions, utilizing pure, organic botanical extracts to rejuvenate your senses.
-                </p>
-              </motion.div>
-            </div>
-
-            {/* Row 3 */}
-            <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-              <motion.div 
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8 }}
-                className="w-full lg:w-1/2"
-              >
-                <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl relative">
-                  <Image src="https://images.unsplash.com/photo-1631262562473-b3bc7f92b7eb?auto=format&fit=crop&w=800&q=80" alt="Private Chauffeur & Heli-pad" fill className="object-cover hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 50vw" />
-                </div>
-              </motion.div>
-              <motion.div 
-                initial={{ opacity: 0, x: 50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8 }}
-                className="w-full lg:w-1/2 space-y-6 text-center lg:text-left"
-              >
-                <h4 className="text-3xl md:text-4xl font-serif text-zinc-900">Private Chauffeur & Heli-pad</h4>
-                <p className="text-zinc-500 leading-relaxed text-base md:text-lg">
-                  Arrive in style and absolute privacy. From our fleet of luxury vehicles and dedicated chauffeurs to our exclusive helipad, your seamless journey to paradise begins the moment you touch down.
-                </p>
-              </motion.div>
-            </div>
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-24 md:space-y-32">
+            {amenities.map((amenity, index) => {
+              const isEven = index % 2 === 0;
+              return (
+                <div key={amenity.id} className={`flex flex-col ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'} items-center gap-10 lg:gap-16`}>
+                  <motion.div 
+                    initial={{ opacity: 0, x: isEven ? -50 : 50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8 }}
+                    className="w-full lg:w-1/2"
+                  >
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl relative">
+                      <Image src={amenity.imageUrl} alt={amenity.title} fill className="object-cover hover:scale-105 transition-transform duration-700" sizes="(max-width: 1024px) 100vw, 50vw" />
+                    </div>
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0, x: isEven ? 50 : -50 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8 }}
+                    className={`w-full lg:w-1/2 space-y-6 text-center lg:text-left ${!isEven ? 'lg:pl-12' : ''}`}
+                  >
+                    <h4 className="text-3xl md:text-4xl font-serif text-zinc-900">{amenity.title}</h4>
+                    <p className="text-zinc-500 leading-relaxed text-base md:text-lg">
+                      {amenity.description}
+                    </p>
+                  </motion.div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -12,6 +12,7 @@ type Room = {
   description: string;
   pricePerNight: number;
   capacity: number;
+  inventory?: number;
   amenities: string[];
   imageUrl: string;
   isAvailable: boolean;
@@ -130,6 +131,7 @@ export default function RoomDetailPage() {
   }
 
   const totalAmount = calculateTotal();
+  const isBookable = room.isAvailable && (room.inventory === undefined || room.inventory > 0);
 
   return (
     <div className="bg-stone-50 min-h-screen">
@@ -176,7 +178,18 @@ export default function RoomDetailPage() {
           <div className="lg:w-1/3">
             <div className="bg-white p-8 rounded-lg shadow-xl border border-zinc-100 sticky top-32">
               <h3 className="text-2xl font-serif text-zinc-900 mb-2">Reserve Your Stay</h3>
-              <p className="text-zinc-500 text-sm mb-8">From ${room.pricePerNight} per night</p>
+              <p className="text-zinc-500 text-sm mb-4">From ${room.pricePerNight} per night</p>
+
+              {!isBookable && (
+                <div className="bg-red-50 text-red-700 p-3 rounded text-sm font-medium mb-6 border border-red-100">
+                  Currently fully booked
+                </div>
+              )}
+              {isBookable && room.inventory !== undefined && room.inventory <= 3 && (
+                <div className="bg-red-50 text-red-700 p-3 rounded text-sm font-medium mb-6 border border-red-100">
+                  Hurry! Only {room.inventory} remaining
+                </div>
+              )}
 
               {bookingSuccess ? (
                 <div className="text-center py-12">
@@ -273,10 +286,10 @@ export default function RoomDetailPage() {
 
                   <button 
                     type="submit" 
-                    disabled={!room.isAvailable || isSubmitting}
+                    disabled={!isBookable || isSubmitting}
                     className="w-full bg-primary text-primary-foreground py-4 rounded uppercase text-sm tracking-widest font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? 'Processing...' : 'Confirm Reservation'}
+                    {isSubmitting ? 'Processing...' : (isBookable ? 'Confirm Reservation' : 'Fully Booked')}
                   </button>
                 </form>
               )}

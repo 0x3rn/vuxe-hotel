@@ -14,6 +14,7 @@ const luxuryRooms = [
     amenities: ["Private Pool", "24/7 Butler", "Panoramic Views", "Helipad Access", "Grand Piano"],
     imageUrl: "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=800&q=80",
     isAvailable: true,
+    inventory: 1,
   },
   {
     id: "ocean-view-villa",
@@ -24,6 +25,7 @@ const luxuryRooms = [
     amenities: ["Ocean View Balcony", "Deep Soaking Tub", "Complimentary Spa Access", "King Bed"],
     imageUrl: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80",
     isAvailable: true,
+    inventory: 5,
   },
   {
     id: "royal-suite",
@@ -34,6 +36,7 @@ const luxuryRooms = [
     amenities: ["Private Courtyard", "Heated Pool", "Outdoor Rain Shower", "Chef's Kitchen"],
     imageUrl: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=800&q=80",
     isAvailable: true,
+    inventory: 2,
   },
   {
     id: "executive-club-room",
@@ -44,6 +47,7 @@ const luxuryRooms = [
     amenities: ["Club Lounge Access", "Evening Turndown", "High-Speed Wi-Fi", "Espresso Machine"],
     imageUrl: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=800&q=80",
     isAvailable: true,
+    inventory: 10,
   },
   {
     id: "honeymoon-suite",
@@ -54,6 +58,31 @@ const luxuryRooms = [
     amenities: ["Vintage Champagne", "Canopy Bed", "Couples Massage", "Late Checkout"],
     imageUrl: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80",
     isAvailable: true,
+    inventory: 3,
+  }
+];
+
+const luxuryAmenities = [
+  {
+    id: "michelin-dining",
+    title: "Michelin-Star Dining",
+    description: "Embark on a culinary journey orchestrated by our world-renowned executive chefs. Savor exquisite dishes crafted from locally sourced, seasonal ingredients, perfectly paired with selections from our award-winning wine cellar.",
+    imageUrl: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80",
+    order: 1
+  },
+  {
+    id: "spa-wellness",
+    title: "Award-Winning Spa & Wellness",
+    description: "Restore balance to your mind, body, and spirit in our holistic wellness sanctuary. Experience personalized treatments drawing upon ancient traditions, utilizing pure, organic botanical extracts to rejuvenate your senses.",
+    imageUrl: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1000&q=80",
+    order: 2
+  },
+  {
+    id: "chauffeur-helipad",
+    title: "Private Chauffeur & Heli-pad",
+    description: "Arrive in style and absolute privacy. From our fleet of luxury vehicles and dedicated chauffeurs to our exclusive helipad, your seamless journey to paradise begins the moment you touch down.",
+    imageUrl: "https://images.unsplash.com/photo-1631262562473-b3bc7f92b7eb?auto=format&fit=crop&w=800&q=80",
+    order: 3
   }
 ];
 
@@ -78,6 +107,12 @@ export default function SeedPage() {
         const roomRef = doc(collection(db, "rooms"), room.id);
         await setDoc(roomRef, room);
         addLog(`Successfully added room: ${room.name}`);
+      }
+
+      for (const amenity of luxuryAmenities) {
+        const amenityRef = doc(collection(db, "amenities"), amenity.id);
+        await setDoc(amenityRef, amenity);
+        addLog(`Successfully added amenity: ${amenity.title}`);
       }
       
       addLog("Database seeding complete!");

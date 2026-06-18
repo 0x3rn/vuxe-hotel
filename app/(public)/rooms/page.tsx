@@ -12,6 +12,7 @@ type Room = {
   description: string;
   pricePerNight: number;
   capacity: number;
+  inventory?: number;
   amenities: string[];
   imageUrl: string;
   isAvailable: boolean;
@@ -62,7 +63,9 @@ export default function RoomsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {rooms.map((room) => (
+            {rooms.map((room) => {
+              const isBookable = room.isAvailable && (room.inventory === undefined || room.inventory > 0);
+              return (
               <motion.div 
                 key={room.id}
                 initial="hidden"
@@ -73,9 +76,14 @@ export default function RoomsPage() {
               >
                 <div className="h-72 overflow-hidden relative">
                   <img src={room.imageUrl} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  {!room.isAvailable && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  {!isBookable && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
                       <span className="text-white tracking-widest uppercase font-semibold">Fully Booked</span>
+                    </div>
+                  )}
+                  {isBookable && room.inventory !== undefined && room.inventory <= 3 && (
+                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur text-red-600 px-3 py-1 rounded shadow-sm text-xs font-bold tracking-wider z-10">
+                      Only {room.inventory} Left
                     </div>
                   )}
                 </div>
@@ -103,17 +111,18 @@ export default function RoomsPage() {
                     <a 
                       href={`/rooms/${room.id}`}
                       className={`border px-6 py-2 rounded uppercase text-xs tracking-widest transition-colors ${
-                        room.isAvailable 
+                        isBookable 
                           ? 'border-zinc-300 text-zinc-700 hover:bg-zinc-900 hover:text-white hover:border-zinc-900'
                           : 'border-zinc-200 text-zinc-300 cursor-not-allowed pointer-events-none'
                       }`}
                     >
-                      {room.isAvailable ? 'Book Now' : 'Unavailable'}
+                      {isBookable ? 'Book Now' : 'Unavailable'}
                     </a>
                   </div>
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

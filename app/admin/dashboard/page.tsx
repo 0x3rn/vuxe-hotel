@@ -18,7 +18,10 @@ export default function DashboardPage() {
 
         let available = 0;
         roomsSnap.forEach(doc => {
-          if (doc.data().isAvailable) available++;
+          const data = doc.data();
+          if (data.isAvailable && typeof data.inventory === 'number' && data.inventory > 0) {
+            available += data.inventory;
+          }
         });
 
         let totalRevenue = 0;
