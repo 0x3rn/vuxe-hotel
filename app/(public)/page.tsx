@@ -26,7 +26,7 @@ export default function HomePage() {
       <section className="relative min-h-[90vh] w-full flex flex-col items-center justify-center bg-stone-50 pt-24 pb-16 lg:py-0">
         <div 
           className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1542314831-c6a4d27ce6a2?auto=format&fit=crop&w=1920&q=80')" }}
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1920&q=80')" }}
         >
           <div className="absolute inset-0 bg-black/50" />
         </div>
@@ -194,7 +194,7 @@ export default function HomePage() {
                 className="w-full lg:w-1/2"
               >
                 <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl">
-                  <img src="https://images.unsplash.com/photo-1414235077428-33898dd1c62c?auto=format&fit=crop&w=800&q=80" alt="Michelin-Star Dining" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                  <img src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80" alt="Michelin-Star Dining" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
                 </div>
               </motion.div>
               <motion.div 
@@ -254,7 +254,7 @@ export default function HomePage() {
                 className="w-full lg:w-1/2"
               >
                 <div className="aspect-[4/3] rounded-lg overflow-hidden shadow-xl lg:shadow-2xl">
-                  <img src="https://images.unsplash.com/photo-1502877338535-766e1452684a?auto=format&fit=crop&w=1000&q=80" alt="Private Chauffeur & Heli-pad" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
+                  <img src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80" alt="Private Chauffeur & Heli-pad" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
                 </div>
               </motion.div>
               <motion.div 
