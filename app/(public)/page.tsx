@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -32,6 +33,27 @@ const staggerContainer: Variants = {
 
 export default function HomePage() {
   const [amenities, setAmenities] = useState<Amenity[]>([]);
+  const router = useRouter();
+
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [guests, setGuests] = useState('1');
+
+  const handleCheckAvailability = () => {
+    if (!checkIn || !checkOut) {
+      alert("Please select both Check In and Check Out dates.");
+      return;
+    }
+    if (new Date(checkOut) <= new Date(checkIn)) {
+      alert("Check Out date must be after Check In date.");
+      return;
+    }
+    const params = new URLSearchParams();
+    params.set('checkIn', checkIn);
+    params.set('checkOut', checkOut);
+    params.set('guests', guests);
+    router.push(`/rooms?${params.toString()}`);
+  };
 
   useEffect(() => {
     const fetchAmenities = async () => {
@@ -90,22 +112,42 @@ export default function HomePage() {
         >
           <div className="flex-1 w-full">
             <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-3 font-medium">Check In</label>
-            <input type="date" className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-sm" />
+            <input 
+              type="date" 
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
+              className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-sm" 
+            />
           </div>
           <div className="flex-1 w-full">
             <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-3 font-medium">Check Out</label>
-            <input type="date" className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-sm" />
+            <input 
+              type="date" 
+              value={checkOut}
+              onChange={(e) => setCheckOut(e.target.value)}
+              min={checkIn}
+              className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-sm" 
+            />
           </div>
           <div className="flex-1 w-full">
             <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-3 font-medium">Guests</label>
-            <select className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-sm">
-              <option>1 Guest</option>
-              <option>2 Guests</option>
-              <option>3 Guests</option>
-              <option>4+ Guests</option>
+            <select 
+              value={guests}
+              onChange={(e) => setGuests(e.target.value)}
+              className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-sm"
+            >
+              <option value="1">1 Guest</option>
+              <option value="2">2 Guests</option>
+              <option value="3">3 Guests</option>
+              <option value="4">4 Guests</option>
+              <option value="5">5 Guests</option>
+              <option value="6">6+ Guests</option>
             </select>
           </div>
-          <button className="bg-primary text-primary-foreground px-8 h-14 md:h-12 rounded uppercase text-sm tracking-widest font-semibold hover:bg-primary/90 transition-colors w-full md:w-auto mt-4 md:mt-0 shadow-md">
+          <button 
+            onClick={handleCheckAvailability}
+            className="bg-primary text-primary-foreground px-8 h-14 md:h-12 rounded uppercase text-sm tracking-widest font-semibold hover:bg-primary/90 transition-colors w-full md:w-auto mt-4 md:mt-0 shadow-md"
+          >
             Check Availability
           </button>
         </motion.div>

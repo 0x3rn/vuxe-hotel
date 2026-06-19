@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import React, { useEffect, useState, Suspense } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import { doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { differenceInDays } from 'date-fns';
 
@@ -18,17 +18,19 @@ type Room = {
   isAvailable: boolean;
 };
 
-export default function RoomDetailPage() {
+function RoomDetailContent() {
   const params = useParams();
   const id = params.id as string;
+  const searchParams = useSearchParams();
   
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
+  const [availableInventory, setAvailableInventory] = useState<number | null>(null);
 
   // Booking Form State
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
-  const [guests, setGuests] = useState('2');
+  const [checkIn, setCheckIn] = useState(searchParams.get('checkIn') || '');
+  const [checkOut, setCheckOut] = useState(searchParams.get('checkOut') || '');
+  const [guests, setGuests] = useState(searchParams.get('guests') || '2');
   const [guestName, setGuestName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -63,6 +65,42 @@ export default function RoomDetailPage() {
       cleanupExpiredBookings();
     }
   }, [id]);
+
+  useEffect(() => {
+    const checkAvailability = async () => {
+      if (!room || !checkIn || !checkOut || room.inventory === undefined) {
+        setAvailableInventory(room?.inventory ?? null);
+        return;
+      }
+      
+      const reqCheckIn = new Date(checkIn).getTime();
+      const reqCheckOut = new Date(checkOut).getTime();
+      
+      if (reqCheckOut <= reqCheckIn) return;
+
+      try {
+        const bookingsQuery = query(collection(db, "bookings"), where("roomId", "==", id), where("status", "in", ["Pending", "Approved"]));
+        const bookingsSnapshot = await getDocs(bookingsQuery);
+        
+        let overlaps = 0;
+        bookingsSnapshot.forEach((doc) => {
+          const b = doc.data();
+          const bCheckIn = new Date(b.checkInDate).getTime();
+          const bCheckOut = new Date(b.checkOutDate).getTime();
+          
+          if (bCheckIn < reqCheckOut && bCheckOut > reqCheckIn) {
+            overlaps++;
+          }
+        });
+
+        setAvailableInventory(Math.max(0, room.inventory - overlaps));
+      } catch (error) {
+        console.error("Error checking availability:", error);
+      }
+    };
+
+    checkAvailability();
+  }, [room, checkIn, checkOut, id]);
 
   const calculateTotal = () => {
     if (!checkIn || !checkOut || !room) return 0;
@@ -143,10 +181,10 @@ export default function RoomDetailPage() {
   }
 
   const totalAmount = calculateTotal();
-  const isBookable = room.isAvailable && (room.inventory === undefined || room.inventory > 0);
+  const isBookable = room.isAvailable && (availableInventory === null || availableInventory > 0);
 
   return (
-    <div className="bg-stone-50 min-h-screen">
+    <div className="bg-stone-50 min-h-screen w-full">
       {/* Hero */}
       <div className="h-[60vh] relative">
         <img src={room.imageUrl} alt={room.name} className="w-full h-full object-cover" />
@@ -192,14 +230,19 @@ export default function RoomDetailPage() {
               <h3 className="text-2xl font-serif text-zinc-900 mb-2">Reserve Your Stay</h3>
               <p className="text-zinc-500 text-sm mb-4">From ${room.pricePerNight} per night</p>
 
-              {!isBookable && (
+              {!isBookable && checkIn && checkOut && (
+                <div className="bg-red-50 text-red-700 p-3 rounded text-sm font-medium mb-6 border border-red-100">
+                  Fully booked for these dates
+                </div>
+              )}
+              {!isBookable && (!checkIn || !checkOut) && (
                 <div className="bg-red-50 text-red-700 p-3 rounded text-sm font-medium mb-6 border border-red-100">
                   Currently fully booked
                 </div>
               )}
-              {isBookable && room.inventory !== undefined && room.inventory <= 3 && (
+              {isBookable && availableInventory !== null && availableInventory <= 3 && (
                 <div className="bg-red-50 text-red-700 p-3 rounded text-sm font-medium mb-6 border border-red-100">
-                  Hurry! Only {room.inventory} remaining
+                  Hurry! Only {availableInventory} remaining
                 </div>
               )}
 
@@ -310,5 +353,13 @@ export default function RoomDetailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RoomDetailPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center h-screen bg-stone-50"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div></div>}>
+      <RoomDetailContent />
+    </Suspense>
   );
 }
