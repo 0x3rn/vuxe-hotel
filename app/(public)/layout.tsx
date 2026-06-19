@@ -74,7 +74,7 @@ export default function PublicLayout({
               <h3 className="text-white font-medium uppercase tracking-wider text-sm mb-6">Quick Links</h3>
               <ul className="space-y-3 text-sm text-zinc-400">
                 <li><Link href="/rooms" className="hover:text-primary transition-colors">Our Suites</Link></li>
-                <li><a href="#" onClick={(e) => { e.preventDefault(); alert('Transport booking modal coming soon!'); }} className="hover:text-primary transition-colors">Book Transport</a></li>
+                <li><Link href="/transport" className="hover:text-primary transition-colors">Book Transport</Link></li>
                 <li><a href="#dining" className="hover:text-primary transition-colors">Dining</a></li>
                 <li><a href="#spa" className="hover:text-primary transition-colors">Spa & Wellness</a></li>
                 <li><a href="#offers" className="hover:text-primary transition-colors">Special Offers</a></li>

@@ -36,6 +36,7 @@ function RoomDetailContent() {
   const [phone, setPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookingRef, setBookingRef] = useState('');
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -117,20 +118,29 @@ function RoomDetailContent() {
 
     setIsSubmitting(true);
     try {
+      // Generate a friendly 6-character alphanumeric reference
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let ref = 'LX-';
+      for (let i = 0; i < 6; i++) {
+        ref += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
       const bookingData = {
         roomId: room.id,
         roomName: room.name,
         guestName,
-        email,
+        email: email.toLowerCase().trim(),
         phone,
         checkInDate: checkIn,
         checkOutDate: checkOut,
         totalPrice: calculateTotal(),
         status: 'Pending',
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        bookingRef: ref
       };
       
       await addDoc(collection(db, "bookings"), bookingData);
+      setBookingRef(ref);
       
       // Trigger Firebase Email Extension by writing to the 'mail' collection
       await addDoc(collection(db, "mail"), {
@@ -143,6 +153,7 @@ function RoomDetailContent() {
               <p>Dear ${guestName},</p>
               <p>Thank you for requesting to stay with us. We have successfully received your reservation request for the <strong>${room.name}</strong>.</p>
               <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                <p style="margin: 5px 0;"><strong>Booking Reference:</strong> ${ref}</p>
                 <p style="margin: 5px 0;"><strong>Check-in:</strong> ${checkIn}</p>
                 <p style="margin: 5px 0;"><strong>Check-out:</strong> ${checkOut}</p>
                 <p style="margin: 5px 0;"><strong>Estimated Total:</strong> $${calculateTotal().toLocaleString()}</p>
@@ -252,8 +263,12 @@ function RoomDetailContent() {
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                   </div>
                   <h4 className="text-2xl font-serif text-zinc-900 mb-2">Booking Requested</h4>
+                  <div className="bg-zinc-50 border border-zinc-100 p-4 rounded-lg my-6">
+                    <p className="text-xs uppercase tracking-widest text-zinc-400 mb-1">Your Booking Reference</p>
+                    <p className="text-xl font-mono text-zinc-900 font-semibold">{bookingRef}</p>
+                  </div>
                   <p className="text-zinc-500 text-sm">
-                    Thank you! We have received your request and will contact you shortly to confirm your reservation.
+                    Thank you! We have received your request and will contact you shortly to confirm your reservation. Please save your booking reference.
                   </p>
                 </div>
               ) : (

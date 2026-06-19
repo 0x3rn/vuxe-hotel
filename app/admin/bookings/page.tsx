@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, query, orderBy, addDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { CheckCircle, XCircle } from 'lucide-react';
 
@@ -17,6 +17,7 @@ type Booking = {
   totalPrice: number;
   status: string; // 'Pending', 'Confirmed', 'Cancelled'
   createdAt?: any;
+  bookingRef?: string;
 };
 
 const CountdownBadge = ({ createdAt }: { createdAt: any }) => {
@@ -98,9 +99,46 @@ export default function AdminBookingsPage() {
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
+      const booking = bookings.find(b => b.id === id);
+      if (!booking) return;
+
       await updateDoc(doc(db, "bookings", id), {
         status: newStatus
       });
+
+      // Send confirmation email
+      if (newStatus === 'Confirmed') {
+        const refDisplay = booking.bookingRef ? `<p style="font-size: 18px; margin: 15px 0;"><strong>Booking Reference: <span style="color: #d4af37;">${booking.bookingRef}</span></strong></p>` : '';
+        const transportInvite = booking.bookingRef ? `
+          <p style="margin-top: 20px;"><strong>Exclusive Transport Service</strong></p>
+          <p>As a confirmed guest, you are invited to book our private chauffeur service. Please use your email and Booking Reference to request a ride.</p>
+        ` : '';
+
+        await addDoc(collection(db, "mail"), {
+          to: booking.email,
+          message: {
+            subject: "Reservation Confirmed - Luxe Hotel",
+            html: `
+              <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
+                <h1 style="color: #111; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Luxe Hotel</h1>
+                <p>Dear ${booking.guestName},</p>
+                <p>We are delighted to confirm your reservation for the <strong>${booking.roomName}</strong>.</p>
+                ${refDisplay}
+                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                  <p style="margin: 5px 0;"><strong>Check-in:</strong> ${booking.checkInDate}</p>
+                  <p style="margin: 5px 0;"><strong>Check-out:</strong> ${booking.checkOutDate}</p>
+                  <p style="margin: 5px 0;"><strong>Total Price:</strong> $${booking.totalPrice.toLocaleString()}</p>
+                </div>
+                ${transportInvite}
+                <br/>
+                <p>We look forward to welcoming you.</p>
+                <p>Warm regards,<br/><strong>The Luxe Team</strong></p>
+              </div>
+            `
+          }
+        });
+      }
+
       fetchBookings();
     } catch (error) {
       console.error("Error updating status:", error);

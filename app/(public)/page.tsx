@@ -290,7 +290,7 @@ export default function HomePage() {
                     </p>
                     {amenity.title.toLowerCase().includes('chauffeur') && (
                       <div className="pt-2">
-                        <Link href="#" onClick={(e) => { e.preventDefault(); alert('Transport booking modal coming soon!'); }} className="border border-zinc-300 text-zinc-700 px-8 py-3 rounded uppercase text-sm tracking-widest font-semibold hover:bg-zinc-900 hover:text-white transition-colors inline-block">
+                        <Link href="/transport" className="border border-zinc-300 text-zinc-700 px-8 py-3 rounded uppercase text-sm tracking-widest font-semibold hover:bg-zinc-900 hover:text-white transition-colors inline-block">
                           Book Transport
                         </Link>
                       </div>
