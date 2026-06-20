@@ -165,14 +165,11 @@ function RoomsList() {
                   <p className="text-zinc-500 text-sm mb-6 line-clamp-3 flex-1">{room.description}</p>
                   
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {room.amenities.slice(0, 3).map((amenity, idx) => (
+                    {room.amenities.map((amenity, idx) => (
                       <span key={idx} className="text-xs bg-zinc-100 text-zinc-600 px-2 py-1 rounded">
                         {amenity}
                       </span>
                     ))}
-                    {room.amenities.length > 3 && (
-                      <span className="text-xs bg-zinc-100 text-zinc-600 px-2 py-1 rounded">+{room.amenities.length - 3}</span>
-                    )}
                   </div>
 
                   <div className="flex items-center justify-between border-t border-zinc-100 pt-6 mt-auto">
