@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, Variants } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -85,6 +86,16 @@ export default function AmenitiesPage() {
                     <p className="text-zinc-500 leading-relaxed text-base md:text-lg">
                       {amenity.description}
                     </p>
+                    {amenity.title.toLowerCase().includes('chauffeur') && (
+                      <div className="pt-4">
+                        <Link 
+                          href="/transport" 
+                          className="inline-block bg-primary text-primary-foreground px-8 py-3 rounded text-sm font-medium uppercase tracking-widest hover:bg-primary/90 transition-colors"
+                        >
+                          Book Transport
+                        </Link>
+                      </div>
+                    )}
                   </motion.div>
                 </div>
               );
