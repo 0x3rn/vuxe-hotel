@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { collection, getDocs, query, where, updateDoc, doc, addDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(request: Request) {
   try {
@@ -21,10 +20,12 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch bookings to check
-    let bookingsQuery = query(collection(db, "bookings"), where("status", "==", "Pending"));
-    
-    const querySnapshot = await getDocs(bookingsQuery);
+    if (!adminDb) {
+      return NextResponse.json({ error: 'Firebase admin not initialized' }, { status: 500 });
+    }
+
+    // Fetch bookings to check securely using firebase-admin
+    const querySnapshot = await adminDb.collection("bookings").where("status", "==", "Pending").get();
     
     const now = new Date();
     const GRACE_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 hours
@@ -41,17 +42,17 @@ export async function GET(request: Request) {
       if (!data.createdAt) continue;
       
       // createdAt is a Firestore Timestamp
-      const createdAtDate = data.createdAt.toDate();
+      const createdAtDate = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
       const elapsedMs = now.getTime() - createdAtDate.getTime();
 
       if (elapsedMs > GRACE_PERIOD_MS) {
         // 1. Update Booking Status
-        await updateDoc(doc(db, "bookings", bookingDoc.id), {
+        await adminDb.collection("bookings").doc(bookingDoc.id).update({
           status: 'Cancelled'
         });
 
         // 2. Trigger Cancellation Email
-        await addDoc(collection(db, "mail"), {
+        await adminDb.collection("mail").add({
           to: data.email,
           message: {
             subject: "Reservation Expired - Luxe Hotel",
@@ -76,12 +77,12 @@ export async function GET(request: Request) {
         cancelledCount++;
       } else if (elapsedMs > REMINDER_PERIOD_MS && !data.reminderSent) {
         // 1. Update Booking to mark reminder sent
-        await updateDoc(doc(db, "bookings", bookingDoc.id), {
+        await adminDb.collection("bookings").doc(bookingDoc.id).update({
           reminderSent: true
         });
 
         // 2. Trigger Reminder Email
-        await addDoc(collection(db, "mail"), {
+        await adminDb.collection("mail").add({
           to: data.email,
           message: {
             subject: "Action Required: Complete Your Luxe Hotel Reservation",

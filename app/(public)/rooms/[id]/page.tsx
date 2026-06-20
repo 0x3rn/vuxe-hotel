@@ -217,7 +217,7 @@ function RoomDetailContent() {
                 {room.description}
               </p>
               <div className="mt-8 flex gap-6 text-sm uppercase tracking-widest text-zinc-400">
-                <span>Capacity: {room.capacity} Guests</span>
+                <span>Capacity: {room.capacity} {room.capacity === 1 ? 'Guest' : 'Guests'}</span>
                 <span>Price: ${room.pricePerNight} / Night</span>
               </div>
             </section>
@@ -253,7 +253,7 @@ function RoomDetailContent() {
               )}
               {isBookable && availableInventory !== null && availableInventory <= 3 && (
                 <div className="bg-red-50 text-red-700 p-3 rounded text-sm font-medium mb-6 border border-red-100">
-                  Hurry! Only {availableInventory} remaining
+                  Limited Availability: Only {availableInventory} {availableInventory === 1 ? 'room' : 'rooms'} remaining
                 </div>
               )}
 

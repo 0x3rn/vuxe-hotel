@@ -111,7 +111,7 @@ function RoomsList() {
         {hasFilters && (
           <div className="inline-flex flex-col sm:flex-row items-center gap-4 bg-white px-6 py-3 rounded-full shadow-sm border border-zinc-100 text-sm text-zinc-600">
             <span>
-              Showing availability for <strong>{guestsParam || 'Any'} guests</strong>
+              Showing availability for <strong>{guestsParam || 'Any'} {guestsParam === '1' ? 'guest' : 'guests'}</strong>
               {checkInParam && checkOutParam && (
                 <span> from <strong>{checkInParam}</strong> to <strong>{checkOutParam}</strong></span>
               )}
@@ -161,7 +161,7 @@ function RoomsList() {
                 </div>
                 <div className="p-8 border border-t-0 border-zinc-100 flex flex-col flex-1">
                   <h4 className="text-2xl font-serif text-zinc-900 mb-2">{room.name}</h4>
-                  <p className="text-xs tracking-widest text-zinc-400 uppercase mb-4">Up to {room.capacity} Guests</p>
+                  <p className="text-xs tracking-widest text-zinc-400 uppercase mb-4">Up to {room.capacity} {room.capacity === 1 ? 'Guest' : 'Guests'}</p>
                   <p className="text-zinc-500 text-sm mb-6 line-clamp-3 flex-1">{room.description}</p>
                   
                   <div className="flex flex-wrap gap-2 mb-6">
