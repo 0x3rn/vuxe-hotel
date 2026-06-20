@@ -28,7 +28,9 @@ export async function GET(request: Request) {
     
     const now = new Date();
     const GRACE_PERIOD_MS = 24 * 60 * 60 * 1000; // 24 hours
+    const REMINDER_PERIOD_MS = 12 * 60 * 60 * 1000; // 12 hours
     let cancelledCount = 0;
+    let reminderCount = 0;
 
     for (const bookingDoc of querySnapshot.docs) {
       const data = bookingDoc.data();
@@ -72,13 +74,41 @@ export async function GET(request: Request) {
         });
 
         cancelledCount++;
+      } else if (elapsedMs > REMINDER_PERIOD_MS && !data.reminderSent) {
+        // 1. Update Booking to mark reminder sent
+        await updateDoc(doc(db, "bookings", bookingDoc.id), {
+          reminderSent: true
+        });
+
+        // 2. Trigger Reminder Email
+        await addDoc(collection(db, "mail"), {
+          to: data.email,
+          message: {
+            subject: "Action Required: Complete Your Luxe Hotel Reservation",
+            html: `
+              <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
+                <h1 style="color: #111; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Luxe Hotel</h1>
+                <p>Dear ${data.guestName},</p>
+                <p>We noticed that your reservation for the <strong>${data.roomName}</strong> is still pending confirmation.</p>
+                <p>To ensure your suite is perfectly prepared for your arrival, we kindly request that you complete your reservation details and payment within the next 12 hours. As a highly sought-after destination, we can only hold unconfirmed reservations for a maximum of 24 hours.</p>
+                <br/>
+                <p>Our concierge team remains at your disposal should you require any assistance with your itinerary or special arrangements.</p>
+                <br/>
+                <p>Warm regards,<br/><strong>The Luxe Team</strong></p>
+              </div>
+            `
+          }
+        });
+        
+        reminderCount++;
       }
     }
 
     return NextResponse.json({ 
       success: true, 
-      message: `Successfully cancelled ${cancelledCount} expired bookings.`,
-      cancelledCount 
+      message: `Successfully cancelled ${cancelledCount} expired bookings and sent ${reminderCount} reminders.`,
+      cancelledCount,
+      reminderCount
     });
 
   } catch (error: any) {

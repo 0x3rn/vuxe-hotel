@@ -23,6 +23,7 @@ type TransportRequest = {
 export default function AdminTransportPage() {
   const [requests, setRequests] = useState<TransportRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -70,10 +71,28 @@ export default function AdminTransportPage() {
     }
   };
 
+  const filteredRequests = requests.filter(r => {
+    return statusFilter === 'All' || r.status === statusFilter;
+  });
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-serif text-primary">Transport Requests</h1>
+      </div>
+
+      <div className="flex mb-6">
+        <div className="flex bg-gray-100 p-1 rounded-full space-x-1 overflow-x-auto max-w-full scrollbar-hide">
+          {['All', 'Pending', 'Assigned', 'Completed'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setStatusFilter(tab)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${statusFilter === tab ? 'bg-white shadow text-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              {tab === 'Pending' ? 'Pending Approval' : tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -94,7 +113,7 @@ export default function AdminTransportPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {requests.map((req) => (
+              {filteredRequests.map((req) => (
                 <tr key={req.id} className="hover:bg-gray-50/50">
                   <td className="py-4 px-6">
                     <div className="font-medium text-gray-900">{req.guestName}</div>
@@ -147,9 +166,9 @@ export default function AdminTransportPage() {
                   </td>
                 </tr>
               ))}
-              {requests.length === 0 && (
+              {filteredRequests.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-500">No transport requests yet.</td>
+                  <td colSpan={6} className="py-8 text-center text-gray-500">No transport requests found.</td>
                 </tr>
               )}
             </tbody>

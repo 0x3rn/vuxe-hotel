@@ -218,7 +218,7 @@ export default function TransportPage() {
                       placeholder="Airport, Station, or Address"
                       value={pickupLocation}
                       onChange={(e) => setPickupLocation(e.target.value)}
-                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-sm bg-transparent" 
+                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-base bg-transparent" 
                     />
                   </div>
                   <div>
@@ -229,7 +229,7 @@ export default function TransportPage() {
                       placeholder="Luxe Hotel or Address"
                       value={dropoffLocation}
                       onChange={(e) => setDropoffLocation(e.target.value)}
-                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-sm bg-transparent" 
+                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-base bg-transparent" 
                     />
                   </div>
                   <div>
@@ -239,7 +239,7 @@ export default function TransportPage() {
                       required
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
-                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-sm bg-transparent" 
+                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-base bg-transparent" 
                     />
                   </div>
                   <div>
@@ -249,7 +249,7 @@ export default function TransportPage() {
                       required
                       value={time}
                       onChange={(e) => setTime(e.target.value)}
-                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-sm bg-transparent" 
+                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-base bg-transparent" 
                     />
                   </div>
                 </div>
@@ -318,7 +318,7 @@ export default function TransportPage() {
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             exit={{ opacity: 0 }} 
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-zinc-900/40"
+            className="fixed inset-0 h-[100dvh] z-50 flex items-center justify-center p-4 backdrop-blur-md bg-zinc-900/40"
           >
             <motion.div 
               initial={{ scale: 0.95, y: 20 }} 

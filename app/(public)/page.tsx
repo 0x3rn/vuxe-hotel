@@ -76,7 +76,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col w-full overflow-hidden">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] w-full flex flex-col items-center justify-center bg-stone-50 pt-24 pb-16 lg:py-0">
+      <section className="relative min-h-[80vh] lg:min-h-[90vh] w-full flex flex-col items-center justify-center bg-stone-50">
         <div className="absolute inset-0 z-0">
           <Image 
             src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1920&q=80"
@@ -93,7 +93,7 @@ export default function HomePage() {
           initial="hidden" 
           animate="visible" 
           variants={fadeInUp}
-          className="relative z-10 text-center text-white space-y-6 max-w-4xl px-6 flex-1 flex flex-col justify-center mt-12 lg:mt-0"
+          className="relative z-10 text-center text-white space-y-6 max-w-4xl px-6 flex-1 flex flex-col justify-center"
         >
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif font-bold drop-shadow-lg tracking-wide">
             A Symphony of Luxury
@@ -102,13 +102,15 @@ export default function HomePage() {
             Discover a world of elegance and unparalleled service in the heart of paradise.
           </p>
         </motion.div>
+      </section>
 
-        {/* Booking Widget */}
+      {/* Booking Widget */}
+      <div className="relative z-20 container mx-auto px-4 flex justify-center -mt-32 sm:-mt-24 mb-16 lg:mb-32">
         <motion.div 
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="relative lg:absolute lg:-bottom-24 z-20 w-[95%] max-w-5xl bg-white shadow-xl lg:shadow-2xl p-6 md:p-8 rounded-lg text-foreground flex flex-col md:flex-row gap-6 items-end border border-zinc-200 mt-12 lg:mt-0"
+          className="w-full max-w-5xl bg-white shadow-xl lg:shadow-2xl p-6 md:p-8 rounded-lg text-foreground flex flex-col md:flex-row gap-6 items-end border border-zinc-200"
         >
           <div className="flex-1 w-full">
             <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-3 font-medium">Check In</label>
@@ -116,7 +118,7 @@ export default function HomePage() {
               type="date" 
               value={checkIn}
               onChange={(e) => setCheckIn(e.target.value)}
-              className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-sm" 
+              className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-base" 
             />
           </div>
           <div className="flex-1 w-full">
@@ -126,7 +128,7 @@ export default function HomePage() {
               value={checkOut}
               onChange={(e) => setCheckOut(e.target.value)}
               min={checkIn}
-              className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-sm" 
+              className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-base" 
             />
           </div>
           <div className="flex-1 w-full">
@@ -134,7 +136,7 @@ export default function HomePage() {
             <select 
               value={guests}
               onChange={(e) => setGuests(e.target.value)}
-              className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-sm"
+              className="w-full h-12 border-b border-border focus:outline-none focus:border-primary bg-transparent text-base"
             >
               <option value="1">1 Guest</option>
               <option value="2">2 Guests</option>
@@ -151,10 +153,7 @@ export default function HomePage() {
             Check Availability
           </button>
         </motion.div>
-      </section>
-
-      {/* spacer for floating widget */}
-      <div className="hidden lg:block h-32 bg-white"></div>
+      </div>
 
       {/* About Us */}
       <section className="py-16 md:py-24 lg:py-32 bg-white">

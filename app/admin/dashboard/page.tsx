@@ -5,47 +5,82 @@ import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState({ bookings: 0, revenue: 0, availableRooms: 0, approvedBookings: 0, cancelledBookings: 0 });
+  const [stats, setStats] = useState({
+    bookingsPending: 0,
+    bookingsConfirmed: 0,
+    bookingsCancelled: 0,
+    transportPending: 0,
+    transportAssigned: 0,
+    transportCompleted: 0,
+    availableRooms: 0,
+    revenue: 0
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [roomsSnap, bookingsSnap] = await Promise.all([
+        const [roomsSnap, bookingsSnap, transportSnap] = await Promise.all([
           getDocs(collection(db, "rooms")),
-          getDocs(collection(db, "bookings"))
+          getDocs(collection(db, "bookings")),
+          getDocs(collection(db, "transport_requests"))
         ]);
 
-        let available = 0;
+        let availableRooms = 0;
         roomsSnap.forEach(doc => {
           const data = doc.data();
           if (data.isAvailable && typeof data.inventory === 'number' && data.inventory > 0) {
-            available += data.inventory;
+            availableRooms += data.inventory;
           }
         });
 
-        let totalRevenue = 0;
-        let totalBookings = 0;
-        let approvedBookings = 0;
-        let cancelledBookings = 0;
+        let bookingsPending = 0;
+        let bookingsConfirmed = 0;
+        let bookingsCancelled = 0;
+        let revenue = 0;
+
         bookingsSnap.forEach(doc => {
           const data = doc.data();
-          totalBookings++;
-          
+          if (data.status === 'Pending') bookingsPending++;
           if (data.status === 'Confirmed') {
-            approvedBookings++;
-            totalRevenue += data.totalPrice || 0;
-          } else if (data.status === 'Cancelled') {
-            cancelledBookings++;
+            bookingsConfirmed++;
+            revenue += data.totalPrice || 0;
           }
+          if (data.status === 'Cancelled') bookingsCancelled++;
+        });
+
+        let transportPending = 0;
+        let transportAssigned = 0;
+        let transportCompleted = 0;
+
+        transportSnap.forEach(doc => {
+          const data = doc.data();
+          if (data.status === 'Pending') transportPending++;
+          if (data.status === 'Assigned') transportAssigned++;
+          if (data.status === 'Completed' || data.status === 'Cancelled') transportCompleted++; // Count cancelled/completed as done, but let's label it correctly if needed. Wait, transport doesn't technically have "Cancelled" right now, but they wanted Total Cancelled.
+        });
+
+        // Let's refine the loop above:
+        let tPending = 0;
+        let tAssigned = 0;
+        let tCancelled = 0;
+
+        transportSnap.forEach(doc => {
+          const data = doc.data();
+          if (data.status === 'Pending') tPending++;
+          else if (data.status === 'Assigned') tAssigned++;
+          else if (data.status === 'Cancelled' || data.status === 'Completed') tCancelled++;
         });
 
         setStats({
-          bookings: totalBookings,
-          revenue: totalRevenue,
-          availableRooms: available,
-          approvedBookings,
-          cancelledBookings
+          bookingsPending,
+          bookingsConfirmed,
+          bookingsCancelled,
+          transportPending: tPending,
+          transportAssigned: tAssigned,
+          transportCompleted: tCancelled,
+          availableRooms,
+          revenue
         });
       } catch (error) {
         console.error("Error fetching stats:", error);
@@ -59,7 +94,9 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-serif text-primary mb-8">Dashboard Overview</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-serif text-primary">Dashboard Overview</h1>
+      </div>
       
       {loading ? (
         <div className="flex items-center gap-4 text-gray-500">
@@ -67,28 +104,63 @@ export default function DashboardPage() {
           Loading metrics...
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <h3 className="text-gray-500 text-sm uppercase tracking-wider mb-2 font-medium">Total Bookings</h3>
-            <p className="text-4xl font-serif text-gray-900">{stats.bookings}</p>
+        <div className="space-y-10">
+          {/* Revenue & Rooms (Global Stats) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+              <h3 className="text-gray-500 text-sm uppercase tracking-wider mb-2 font-medium">Available Rooms</h3>
+              <p className="text-4xl font-serif text-gray-900">{stats.availableRooms}</p>
+            </div>
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+              <h3 className="text-gray-500 text-sm uppercase tracking-wider mb-2 font-medium">Total Revenue</h3>
+              <p className="text-4xl font-serif text-gray-900">${stats.revenue.toLocaleString()}</p>
+            </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-green-100 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-green-50 rounded-bl-full -mr-8 -mt-8"></div>
-            <h3 className="text-green-800 text-sm uppercase tracking-wider mb-2 font-medium relative z-10">Approved</h3>
-            <p className="text-4xl font-serif text-green-900 relative z-10">{stats.approvedBookings}</p>
+
+          <hr className="border-gray-100" />
+
+          {/* Bookings Section */}
+          <div>
+            <h2 className="text-xl font-serif text-zinc-800 mb-4">Bookings</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-yellow-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-50 rounded-bl-full -mr-8 -mt-8"></div>
+                <h3 className="text-yellow-800 text-sm uppercase tracking-wider mb-2 font-medium relative z-10">Pending</h3>
+                <p className="text-4xl font-serif text-yellow-900 relative z-10">{stats.bookingsPending}</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-green-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-green-50 rounded-bl-full -mr-8 -mt-8"></div>
+                <h3 className="text-green-800 text-sm uppercase tracking-wider mb-2 font-medium relative z-10">Confirmed</h3>
+                <p className="text-4xl font-serif text-green-900 relative z-10">{stats.bookingsConfirmed}</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-red-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-red-50 rounded-bl-full -mr-8 -mt-8"></div>
+                <h3 className="text-red-800 text-sm uppercase tracking-wider mb-2 font-medium relative z-10">Cancelled</h3>
+                <p className="text-4xl font-serif text-red-900 relative z-10">{stats.bookingsCancelled}</p>
+              </div>
+            </div>
           </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-red-100 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-16 h-16 bg-red-50 rounded-bl-full -mr-8 -mt-8"></div>
-            <h3 className="text-red-800 text-sm uppercase tracking-wider mb-2 font-medium relative z-10">Cancelled</h3>
-            <p className="text-4xl font-serif text-red-900 relative z-10">{stats.cancelledBookings}</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <h3 className="text-gray-500 text-sm uppercase tracking-wider mb-2 font-medium">Total Revenue</h3>
-            <p className="text-4xl font-serif text-gray-900">${stats.revenue.toLocaleString()}</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-            <h3 className="text-gray-500 text-sm uppercase tracking-wider mb-2 font-medium">Available Rooms</h3>
-            <p className="text-4xl font-serif text-gray-900">{stats.availableRooms}</p>
+
+          {/* Transport Section */}
+          <div>
+            <h2 className="text-xl font-serif text-zinc-800 mb-4">Transport Requests</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-yellow-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-yellow-50 rounded-bl-full -mr-8 -mt-8"></div>
+                <h3 className="text-yellow-800 text-sm uppercase tracking-wider mb-2 font-medium relative z-10">Pending</h3>
+                <p className="text-4xl font-serif text-yellow-900 relative z-10">{stats.transportPending}</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-blue-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -mr-8 -mt-8"></div>
+                <h3 className="text-blue-800 text-sm uppercase tracking-wider mb-2 font-medium relative z-10">Assigned</h3>
+                <p className="text-4xl font-serif text-blue-900 relative z-10">{stats.transportAssigned}</p>
+              </div>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-gray-50 rounded-bl-full -mr-8 -mt-8"></div>
+                <h3 className="text-gray-600 text-sm uppercase tracking-wider mb-2 font-medium relative z-10">Completed / Cancelled</h3>
+                <p className="text-4xl font-serif text-gray-800 relative z-10">{stats.transportCompleted}</p>
+              </div>
+            </div>
           </div>
         </div>
       )}

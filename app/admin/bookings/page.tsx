@@ -64,6 +64,9 @@ const CountdownBadge = ({ createdAt }: { createdAt: any }) => {
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -146,10 +149,45 @@ export default function AdminBookingsPage() {
     }
   };
 
+  const filteredBookings = bookings.filter(b => {
+    const matchesStatus = statusFilter === 'All' || b.status === statusFilter;
+    const matchesSearch = !searchTerm || 
+      b.guestName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      b.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (b.bookingRef && b.bookingRef.toLowerCase().includes(searchTerm.toLowerCase()));
+    return matchesStatus && matchesSearch;
+  });
+
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-serif text-primary">Manage Bookings</h1>
+      </div>
+
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        {/* Status Tabs */}
+        <div className="flex bg-gray-100 p-1 rounded-full space-x-1">
+          {['All', 'Pending', 'Confirmed', 'Cancelled'].map(tab => (
+            <button
+              key={tab}
+              onClick={() => setStatusFilter(tab)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${statusFilter === tab ? 'bg-white shadow text-primary' : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        
+        {/* Search Bar */}
+        <div className="w-full md:w-72">
+          <input
+            type="text"
+            placeholder="Search name, email, or ref..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full border border-gray-200 rounded-full px-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          />
+        </div>
       </div>
 
       {loading ? (
@@ -170,12 +208,13 @@ export default function AdminBookingsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {bookings.map((booking) => (
+              {filteredBookings.map((booking) => (
                 <tr key={booking.id} className="hover:bg-gray-50/50">
                   <td className="py-4 px-6">
                     <div className="font-medium text-gray-900">{booking.guestName}</div>
                     <div className="text-xs text-gray-500">{booking.email}</div>
                     {booking.phone && <div className="text-xs text-gray-500">{booking.phone}</div>}
+                    {booking.bookingRef && <div className="text-xs font-mono text-zinc-500 mt-1">Ref: {booking.bookingRef}</div>}
                   </td>
                   <td className="py-4 px-6">
                     <div className="text-gray-900">{booking.roomName}</div>
@@ -221,9 +260,9 @@ export default function AdminBookingsPage() {
                   </td>
                 </tr>
               ))}
-              {bookings.length === 0 && (
+              {filteredBookings.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-8 text-center text-gray-500">No bookings yet.</td>
+                  <td colSpan={6} className="py-8 text-center text-gray-500">No bookings found.</td>
                 </tr>
               )}
             </tbody>
