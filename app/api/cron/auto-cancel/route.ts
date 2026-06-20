@@ -66,7 +66,7 @@ export async function GET(request: Request) {
                 </div>
                 <p>We would still absolutely love to host you. Please visit our website again whenever you are ready to make a new reservation.</p>
                 <br/>
-                <a href="https://your-hotel-domain.com" style="display: inline-block; background-color: #111; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Book Again</a>
+                <a href="https://vuxe-hotel.vercel.app" style="display: inline-block; background-color: #111; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Book Again</a>
                 <br/><br/>
                 <p>Warm regards,<br/><strong>The Luxe Team</strong></p>
               </div>
