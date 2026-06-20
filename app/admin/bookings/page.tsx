@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, doc, updateDoc, query, orderBy, addDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { CheckCircle, XCircle } from 'lucide-react';
 
 type Booking = {
@@ -30,8 +28,7 @@ const CountdownBadge = ({ createdAt }: { createdAt: any }) => {
       return;
     }
     
-    // Convert Firestore Timestamp to JS Date
-    const createdDate = createdAt?.toDate ? createdAt.toDate() : new Date(createdAt);
+    const createdDate = new Date(createdAt);
     const expireDate = new Date(createdDate.getTime() + 24 * 60 * 60 * 1000);
 
     const updateTimer = () => {
@@ -71,26 +68,12 @@ export default function AdminBookingsPage() {
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, "bookings"), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
-      const bookingsData: Booking[] = [];
-      querySnapshot.forEach((doc) => {
-        bookingsData.push({ id: doc.id, ...doc.data() } as Booking);
-      });
-      setBookings(bookingsData);
+      const res = await fetch('/api/admin/data?type=bookings');
+      if (!res.ok) throw new Error('Failed to fetch bookings');
+      const data = await res.json();
+      setBookings(data);
     } catch (error) {
-      console.error("Error fetching bookings with ordering:", error);
-      // Fallback if index is missing for orderBy
-      try {
-        const querySnapshot = await getDocs(collection(db, "bookings"));
-        const bookingsData: Booking[] = [];
-        querySnapshot.forEach((doc) => {
-          bookingsData.push({ id: doc.id, ...doc.data() } as Booking);
-        });
-        setBookings(bookingsData);
-      } catch (err) {
-        console.error(err);
-      }
+      console.error("Error fetching bookings:", error);
     } finally {
       setLoading(false);
     }
@@ -105,42 +88,18 @@ export default function AdminBookingsPage() {
       const booking = bookings.find(b => b.id === id);
       if (!booking) return;
 
-      await updateDoc(doc(db, "bookings", id), {
-        status: newStatus
+      const res = await fetch('/api/admin/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'bookings',
+          id,
+          status: newStatus,
+          bookingData: booking
+        })
       });
-
-      // Send confirmation email
-      if (newStatus === 'Confirmed') {
-        const refDisplay = booking.bookingRef ? `<p style="font-size: 18px; margin: 15px 0;"><strong>Booking Reference: <span style="color: #d4af37;">${booking.bookingRef}</span></strong></p>` : '';
-        const transportInvite = booking.bookingRef ? `
-          <p style="margin-top: 20px;"><strong>Exclusive Transport Service</strong></p>
-          <p>As a confirmed guest, you are invited to book our private chauffeur service. Please use your email and Booking Reference to request a ride.</p>
-        ` : '';
-
-        await addDoc(collection(db, "mail"), {
-          to: booking.email,
-          message: {
-            subject: "Reservation Confirmed - Luxe Hotel",
-            html: `
-              <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
-                <h1 style="color: #111; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">Luxe Hotel</h1>
-                <p>Dear ${booking.guestName},</p>
-                <p>We are delighted to confirm your reservation for the <strong>${booking.roomName}</strong>.</p>
-                ${refDisplay}
-                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0;">
-                  <p style="margin: 5px 0;"><strong>Check-in:</strong> ${booking.checkInDate}</p>
-                  <p style="margin: 5px 0;"><strong>Check-out:</strong> ${booking.checkOutDate}</p>
-                  <p style="margin: 5px 0;"><strong>Total Price:</strong> $${booking.totalPrice.toLocaleString()}</p>
-                </div>
-                ${transportInvite}
-                <br/>
-                <p>We look forward to welcoming you.</p>
-                <p>Warm regards,<br/><strong>The Luxe Team</strong></p>
-              </div>
-            `
-          }
-        });
-      }
+      
+      if (!res.ok) throw new Error('Failed to update status');
 
       fetchBookings();
     } catch (error) {

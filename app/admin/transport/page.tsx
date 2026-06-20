@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { CheckCircle, Clock } from 'lucide-react';
 
 type TransportRequest = {
@@ -28,28 +26,12 @@ export default function AdminTransportPage() {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const q = query(collection(db, "transport_requests"), orderBy("createdAt", "desc"));
-      const querySnapshot = await getDocs(q);
-      const requestsData: TransportRequest[] = [];
-      querySnapshot.forEach((doc) => {
-        requestsData.push({ id: doc.id, ...doc.data() } as TransportRequest);
-      });
-      setRequests(requestsData);
+      const res = await fetch('/api/admin/data?type=transport');
+      if (!res.ok) throw new Error('Failed to fetch transport requests');
+      const data = await res.json();
+      setRequests(data);
     } catch (error) {
-      console.error("Error fetching transport requests with ordering:", error);
-      // Fallback if index is missing
-      try {
-        const querySnapshot = await getDocs(collection(db, "transport_requests"));
-        const requestsData: TransportRequest[] = [];
-        querySnapshot.forEach((doc) => {
-          requestsData.push({ id: doc.id, ...doc.data() } as TransportRequest);
-        });
-        // Sort manually by date
-        requestsData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setRequests(requestsData);
-      } catch (err) {
-        console.error(err);
-      }
+      console.error("Error fetching transport requests:", error);
     } finally {
       setLoading(false);
     }
@@ -61,9 +43,18 @@ export default function AdminTransportPage() {
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
-      await updateDoc(doc(db, "transport_requests", id), {
-        status: newStatus
+      const res = await fetch('/api/admin/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'transport',
+          id,
+          status: newStatus
+        })
       });
+      
+      if (!res.ok) throw new Error('Failed to update status');
+      
       fetchRequests();
     } catch (error) {
       console.error("Error updating status:", error);
