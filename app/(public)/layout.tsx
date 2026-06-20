@@ -85,9 +85,9 @@ export default function PublicLayout({
             <div>
               <h3 className="text-white font-medium uppercase tracking-wider text-sm mb-6">Legal</h3>
               <ul className="space-y-3 text-sm text-zinc-400">
-                <li><a href="#" className="hover:text-primary transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-primary transition-colors">Cancellation Policy</a></li>
+                <li><Link href="/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms-of-service" className="hover:text-primary transition-colors">Terms of Service</Link></li>
+                <li><Link href="/cancellation-policy" className="hover:text-primary transition-colors">Cancellation Policy</Link></li>
               </ul>
             </div>
 
