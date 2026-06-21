@@ -32,7 +32,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="p-6 text-2xl font-serif text-primary border-b border-secondary-foreground/20">
           Luxe Admin
         </div>
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
           <Link href="/admin/dashboard" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/dashboard' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Dashboard
           </Link>
