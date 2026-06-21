@@ -3,10 +3,10 @@ import { adminDb } from '@/lib/firebase-admin';
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
 
     if (!adminDb) {
       console.error('Firebase Admin DB is not initialized');
