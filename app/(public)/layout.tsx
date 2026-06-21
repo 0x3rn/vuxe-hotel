@@ -22,10 +22,13 @@ export default function PublicLayout({
           {/* Desktop Nav */}
           <nav className="hidden md:flex gap-8 text-sm font-medium tracking-wide items-center">
             <Link href="/" className="hover:text-primary transition-colors">HOME</Link>
-            <Link href="/rooms" className="hover:text-primary transition-colors">SUITES</Link>
-            <Link href="/amenities" className="hover:text-primary transition-colors">AMENITIES</Link>
+            <Link href="/rooms" className="hover:text-primary transition-colors">ROOMS</Link>
+            <Link href="/dining" className="hover:text-primary transition-colors">DINING</Link>
+            <Link href="/#gallery" className="hover:text-primary transition-colors">GALLERY</Link>
+            <Link href="/#location" className="hover:text-primary transition-colors">LOCATION</Link>
+            <Link href="/#contact" className="hover:text-primary transition-colors">CONTACT</Link>
             <Link href="/rooms" className="bg-primary text-primary-foreground px-6 py-3 rounded uppercase text-sm tracking-wider font-semibold hover:bg-primary/90 transition-colors ml-4">
-              Book Now
+              Book Your Stay
             </Link>
           </nav>
 
@@ -42,10 +45,13 @@ export default function PublicLayout({
         {isMobileMenuOpen && (
           <div className="md:hidden fixed inset-0 bg-background flex flex-col items-center justify-center space-y-8 z-40 h-screen">
             <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">HOME</Link>
-            <Link href="/rooms" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">SUITES</Link>
-            <Link href="/amenities" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">AMENITIES</Link>
+            <Link href="/rooms" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">ROOMS</Link>
+            <Link href="/dining" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">DINING</Link>
+            <Link href="/#gallery" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">GALLERY</Link>
+            <Link href="/#location" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">LOCATION</Link>
+            <Link href="/#contact" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">CONTACT</Link>
             <Link href="/rooms" onClick={() => setIsMobileMenuOpen(false)} className="bg-primary text-primary-foreground px-8 py-4 rounded uppercase text-lg tracking-wider font-semibold hover:bg-primary/90 transition-colors mt-8">
-              Book Now
+              Book Your Stay
             </Link>
           </div>
         )}
@@ -73,11 +79,10 @@ export default function PublicLayout({
             <div>
               <h3 className="text-white font-medium uppercase tracking-wider text-sm mb-6">Quick Links</h3>
               <ul className="space-y-3 text-sm text-zinc-400">
-                <li><Link href="/rooms" className="hover:text-primary transition-colors">Our Suites</Link></li>
-                <li><Link href="/transport" className="hover:text-primary transition-colors">Book Transport</Link></li>
-                <li><a href="#dining" className="hover:text-primary transition-colors">Dining</a></li>
-                <li><a href="#spa" className="hover:text-primary transition-colors">Spa & Wellness</a></li>
-                <li><a href="#offers" className="hover:text-primary transition-colors">Special Offers</a></li>
+                <li><Link href="/rooms" className="hover:text-primary transition-colors">Rooms</Link></li>
+                <li><Link href="/dining" className="hover:text-primary transition-colors">Dining</Link></li>
+                <li><Link href="/#gallery" className="hover:text-primary transition-colors">Gallery</Link></li>
+                <li><Link href="/#contact" className="hover:text-primary transition-colors">Contact</Link></li>
               </ul>
             </div>
 

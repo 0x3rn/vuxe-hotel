@@ -56,23 +56,11 @@ function RoomsList() {
           const reqCheckIn = new Date(checkInParam).getTime();
           const reqCheckOut = new Date(checkOutParam).getTime();
 
-          // Fetch all active bookings
-          const bookingsQuery = query(collection(db, "bookings"), where("status", "in", ["Pending", "Approved"]));
-          const bookingsSnapshot = await getDocs(bookingsQuery);
+          // Fetch overlapping bookings securely via API
+          const response = await fetch(`/api/rooms/availability?checkIn=${checkInParam}&checkOut=${checkOutParam}`);
+          if (!response.ok) throw new Error("Failed to fetch availability");
           
-          const overlappingCounts: Record<string, number> = {};
-          
-          bookingsSnapshot.forEach((doc) => {
-            const b = doc.data();
-            const bCheckIn = new Date(b.checkInDate).getTime();
-            const bCheckOut = new Date(b.checkOutDate).getTime();
-            
-            // Check if dates overlap
-            // Overlap condition: start1 < end2 AND end1 > start2
-            if (bCheckIn < reqCheckOut && bCheckOut > reqCheckIn) {
-              overlappingCounts[b.roomId] = (overlappingCounts[b.roomId] || 0) + 1;
-            }
-          });
+          const { overlappingCounts } = await response.json();
 
           // Subtract overlapping bookings from inventory
           roomsData = roomsData.map(room => {
