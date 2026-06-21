@@ -194,9 +194,9 @@ export default function HomePage() {
             variants={fadeInUp}
             className="w-full lg:w-1/2"
           >
-            <div className="relative aspect-[4/5] w-full max-w-md mx-auto lg:max-w-none overflow-hidden rounded-lg">
+            <div className="relative w-full h-[280px] md:h-[400px] rounded-2xl overflow-hidden">
               <Image 
-                src="https://images.unsplash.com/photo-1618221118493-9cfa1a1c00da?auto=format&fit=crop&w=800&q=80" 
+                src="https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80" 
                 alt="Welcome to Luxe" 
                 fill 
                 className="object-cover"
@@ -332,7 +332,7 @@ export default function HomePage() {
             variants={fadeInUp}
             className="w-full lg:w-1/2"
           >
-            <div className="relative aspect-[4/5] w-full max-w-md mx-auto lg:max-w-none overflow-hidden rounded-lg">
+            <div className="relative w-full h-[280px] md:h-[400px] rounded-2xl overflow-hidden">
               <Image 
                 src="https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80" 
                 alt="Culinary Experience" 
@@ -530,7 +530,7 @@ export default function HomePage() {
                   whileInView="visible"
                   viewport={{ once: true }}
                   variants={staggerContainer}
-                  className="relative w-full max-w-2xl h-full flex items-center justify-center group/collage"
+                  className="relative w-full max-w-2xl h-full flex items-center justify-center"
                 >
                   {social.map((post, i) => {
                     let transformClass = '';
@@ -562,7 +562,7 @@ export default function HomePage() {
                       >
                         <div 
                           onClick={() => setLightbox({ isOpen: true, src: post.imageUrl })}
-                          className="w-full h-full relative rounded-xl overflow-hidden shadow-2xl transition-all duration-500 cursor-pointer group group-hover/collage:opacity-50 hover:!opacity-100 hover:scale-105 hover:!z-50"
+                          className="w-full h-full relative rounded-xl overflow-hidden shadow-2xl transition-all duration-500 cursor-pointer group hover:scale-105 hover:!z-50"
                         >
                           <Image src={post.imageUrl} alt="Social Feed" fill className="object-cover transition-transform duration-700" />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
@@ -632,13 +632,13 @@ export default function HomePage() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-[85%] h-[70vh] md:max-w-4xl md:h-[85vh] rounded-2xl overflow-hidden shadow-2xl border border-white/10 pointer-events-none bg-zinc-900"
+              className="relative w-full max-w-[85%] h-[70vh] md:max-w-4xl md:h-[85vh] rounded-2xl overflow-hidden shadow-2xl pointer-events-none bg-zinc-900"
             >
               <Image 
                 src={lightbox.src} 
                 alt="Fullscreen View" 
                 fill 
-                className="object-cover md:object-contain"
+                className="object-contain"
                 sizes="(max-width: 768px) 85vw, 100vw"
                 quality={100}
               />

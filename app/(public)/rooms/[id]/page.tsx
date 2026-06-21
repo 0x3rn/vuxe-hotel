@@ -166,6 +166,26 @@ function RoomDetailContent() {
         }
       });
 
+      // Admin Alert Email
+      await addDoc(collection(db, "mail"), {
+        to: "concierge@luxehotel.com",
+        message: {
+          subject: `🚨 ALERT: New Booking Request Received - ${ref}`,
+          html: `
+            <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
+              <h2 style="color: #b91c1c; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">New Booking Alert</h2>
+              <p>A new booking request has just been submitted and requires review.</p>
+              <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                <p style="margin: 5px 0;"><strong>Guest Name:</strong> ${guestName}</p>
+                <p style="margin: 5px 0;"><strong>Room:</strong> ${room.name}</p>
+                <p style="margin: 5px 0;"><strong>Reference:</strong> ${ref}</p>
+              </div>
+              <p>Please log in to the <a href="https://luxehotel.com/admin/bookings" style="color: #1d4ed8; text-decoration: underline;">Admin Dashboard</a> to review and confirm this reservation.</p>
+            </div>
+          `
+        }
+      });
+
       setBookingSuccess(true);
     } catch (error) {
       console.error("Error creating booking:", error);

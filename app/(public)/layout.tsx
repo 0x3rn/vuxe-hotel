@@ -26,7 +26,7 @@ export default function PublicLayout({
             <Link href="/dining" className="hover:text-primary transition-colors">DINING</Link>
             <Link href="/#gallery" className="hover:text-primary transition-colors">GALLERY</Link>
             <Link href="/#location" className="hover:text-primary transition-colors">LOCATION</Link>
-            <Link href="/#contact" className="hover:text-primary transition-colors">CONTACT</Link>
+            <Link href="/contact" className="hover:text-primary transition-colors">CONTACT</Link>
             <Link href="/rooms" className="bg-primary text-primary-foreground px-6 py-3 rounded uppercase text-sm tracking-wider font-semibold hover:bg-primary/90 transition-colors ml-4">
               Book Your Stay
             </Link>
@@ -49,7 +49,7 @@ export default function PublicLayout({
             <Link href="/dining" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">DINING</Link>
             <Link href="/#gallery" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">GALLERY</Link>
             <Link href="/#location" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">LOCATION</Link>
-            <Link href="/#contact" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">CONTACT</Link>
+            <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="text-2xl font-serif text-foreground hover:text-primary transition-colors">CONTACT</Link>
             <Link href="/rooms" onClick={() => setIsMobileMenuOpen(false)} className="bg-primary text-primary-foreground px-8 py-4 rounded uppercase text-lg tracking-wider font-semibold hover:bg-primary/90 transition-colors mt-8">
               Book Your Stay
             </Link>
@@ -82,7 +82,7 @@ export default function PublicLayout({
                 <li><Link href="/rooms" className="hover:text-primary transition-colors">Rooms</Link></li>
                 <li><Link href="/dining" className="hover:text-primary transition-colors">Dining</Link></li>
                 <li><Link href="/#gallery" className="hover:text-primary transition-colors">Gallery</Link></li>
-                <li><Link href="/#contact" className="hover:text-primary transition-colors">Contact</Link></li>
+                <li><Link href="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
               </ul>
             </div>
 

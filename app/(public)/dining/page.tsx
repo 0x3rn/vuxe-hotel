@@ -65,7 +65,7 @@ export default function DiningPage() {
             variants={fadeInUp}
             className="w-full lg:w-1/2"
           >
-            <div className="relative aspect-[4/5] w-full max-w-md mx-auto lg:max-w-none overflow-hidden rounded-lg">
+            <div className="relative w-full h-[280px] md:h-[400px] rounded-2xl overflow-hidden">
               <Image 
                 src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80" 
                 alt="Restaurant Interior" 
