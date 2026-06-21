@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 type Room = {
   id: string;
@@ -115,9 +116,10 @@ export default function AdminRoomsPage() {
       
       handleCloseModal();
       fetchRooms();
+      toast.success(editingRoom ? "Room updated successfully!" : "Room created successfully!");
     } catch (error) {
       console.error("Error saving room:", error);
-      alert("Failed to save room.");
+      toast.error("Failed to save room.");
     }
   };
 
@@ -126,9 +128,10 @@ export default function AdminRoomsPage() {
     try {
       await deleteDoc(doc(db, "rooms", id));
       fetchRooms();
+      toast.success("Room deleted successfully.");
     } catch (error) {
       console.error("Error deleting room:", error);
-      alert("Failed to delete room.");
+      toast.error("Failed to delete room.");
     }
   };
 
@@ -217,7 +220,13 @@ export default function AdminRoomsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" rows={3}></textarea>
+                <textarea
+                  required
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  className="w-full bg-white border border-gray-300 px-4 py-2 rounded focus:outline-none focus:border-primary resize-none"
+                  rows={3}
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>

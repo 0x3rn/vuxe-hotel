@@ -154,7 +154,7 @@ export default function HomePage() {
       <section className="relative h-[100dvh] w-full flex flex-col items-center justify-center pt-24 md:pt-0">
         <div className="absolute inset-0 z-0">
           <Image 
-            src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1920&q=80"
+            src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1920&q=80"
             alt="Hero Background"
             fill
             priority

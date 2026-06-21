@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     // Send Admin Alert Email
     await adminDb.collection('mail').add({
-      to: "concierge@luxehotel.com",
+      to: "somtoadmin@gmail.com",
       message: {
         subject: `🚨 ALERT: New Guest Inquiry - ${subject || 'General Inquiry'}`,
         html: `
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
             <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0;">
               <p style="margin: 0; white-space: pre-wrap;">${message}</p>
             </div>
-            <p>Please log in to the <a href="https://luxehotel.com/admin/messages" style="color: #1d4ed8; text-decoration: underline;">Admin Dashboard</a> to manage inquiries.</p>
+            <p>Please log in to the <a href="https://vuxe-hotel.vercel.app/admin/messages" style="color: #1d4ed8; text-decoration: underline;">Admin Dashboard</a> to manage inquiries.</p>
           </div>
         `
       }

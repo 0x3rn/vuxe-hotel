@@ -5,6 +5,7 @@ import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase';
 import { Plus, Trash2, Edit2, X } from 'lucide-react';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 
 type GalleryImage = {
   id: string;
@@ -84,9 +85,10 @@ export default function AdminGalleryPage() {
       
       handleCloseModal();
       fetchImages();
+      toast.success("Gallery image saved successfully!");
     } catch (error) {
       console.error("Error saving gallery image:", error);
-      alert("Failed to save gallery image.");
+      toast.error("Failed to save gallery image.");
     }
   };
 
@@ -95,9 +97,10 @@ export default function AdminGalleryPage() {
     try {
       await deleteDoc(doc(db, "gallery", id));
       fetchImages();
+      toast.success("Image deleted successfully!");
     } catch (error) {
       console.error("Error deleting image:", error);
-      alert("Failed to delete image.");
+      toast.error("Failed to delete image.");
     }
   };
 

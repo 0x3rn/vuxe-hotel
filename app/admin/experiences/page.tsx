@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 type Experience = {
   id: string;
@@ -95,9 +96,10 @@ export default function AdminExperiencesPage() {
       
       handleCloseModal();
       fetchExperiences();
+      toast.success(editingExperience ? "Experience updated successfully!" : "Experience created successfully!");
     } catch (error) {
       console.error("Error saving experience:", error);
-      alert("Failed to save experience.");
+      toast.error("Failed to save experience.");
     }
   };
 
@@ -106,9 +108,10 @@ export default function AdminExperiencesPage() {
     try {
       await deleteDoc(doc(db, "experiences", id));
       fetchExperiences();
+      toast.success("Experience deleted successfully!");
     } catch (error) {
       console.error("Error deleting experience:", error);
-      alert("Failed to delete experience.");
+      toast.error("Failed to delete experience.");
     }
   };
 
@@ -197,7 +200,7 @@ export default function AdminExperiencesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" rows={4}></textarea>
+                <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none resize-none" rows={3}></textarea>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>

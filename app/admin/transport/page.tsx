@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { CheckCircle, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 type TransportRequest = {
   id: string;
@@ -56,9 +57,10 @@ export default function AdminTransportPage() {
       if (!res.ok) throw new Error('Failed to update status');
       
       fetchRequests();
+      toast.success("Status updated successfully.");
     } catch (error) {
       console.error("Error updating status:", error);
-      alert("Failed to update status.");
+      toast.error("Failed to update status.");
     }
   };
 

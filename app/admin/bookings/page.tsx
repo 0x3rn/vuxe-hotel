@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { CheckCircle, XCircle } from 'lucide-react';
+import { Search, Filter, Eye, CheckCircle, XCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 type Booking = {
   id: string;
@@ -102,9 +103,10 @@ export default function AdminBookingsPage() {
       if (!res.ok) throw new Error('Failed to update status');
 
       fetchBookings();
+      toast.success("Booking status updated successfully.");
     } catch (error) {
       console.error("Error updating status:", error);
-      alert("Failed to update status.");
+      toast.error("Failed to update status.");
     }
   };
 

@@ -66,10 +66,10 @@ export default function ContactPage() {
     <div className="flex flex-col w-full bg-white text-zinc-900 pb-0">
       
       {/* 1. HERO SECTION */}
-      <section className="relative h-[40vh] md:h-[50vh] w-full flex flex-col items-center justify-center pt-24 md:pt-0">
+      <section className="relative h-[40vh] md:h-[50vh] w-full flex flex-col items-center justify-center">
         <div className="absolute inset-0 z-0">
           <Image 
-            src="https://images.unsplash.com/photo-1551882547-ff40c0d129df?auto=format&fit=crop&w=1920&q=80"
+            src="https://images.unsplash.com/photo-1625244724120-1fd1d34d00f6?auto=format&fit=crop&w=1920&q=80"
             alt="Luxe Hotel Lobby"
             fill
             priority
@@ -83,7 +83,7 @@ export default function ContactPage() {
           initial="hidden" 
           animate="visible" 
           variants={fadeInUp}
-          className="relative z-10 text-center text-white px-6 mt-16 md:mt-0"
+          className="relative z-10 text-center text-white px-6 pt-20 md:pt-24"
         >
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif tracking-wide mb-4 drop-shadow-md">
             Get in Touch

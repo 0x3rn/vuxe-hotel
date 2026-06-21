@@ -5,6 +5,7 @@ import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase';
 import { Plus, Trash2, Edit2, X } from 'lucide-react';
 import Image from 'next/image';
+import toast from 'react-hot-toast';
 
 type SocialImage = {
   id: string;
@@ -84,9 +85,10 @@ export default function AdminSocialPage() {
       
       handleCloseModal();
       fetchImages();
+      toast.success("Social image saved successfully!");
     } catch (error) {
       console.error("Error saving social image:", error);
-      alert("Failed to save social image.");
+      toast.error("Failed to save social image.");
     }
   };
 
@@ -95,9 +97,10 @@ export default function AdminSocialPage() {
     try {
       await deleteDoc(doc(db, "social", id));
       fetchImages();
+      toast.success("Social post deleted successfully!");
     } catch (error) {
       console.error("Error deleting social post:", error);
-      alert("Failed to delete social post.");
+      toast.error("Failed to delete social post.");
     }
   };
 

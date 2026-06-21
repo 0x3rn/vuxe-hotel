@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   description: "Experience 5-star luxury and elegance.",
 };
 
+import { Toaster } from 'react-hot-toast';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,7 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} h-full antialiased`} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>{children}</body>
+      <body className="min-h-full flex flex-col bg-background text-foreground" suppressHydrationWarning>
+        {children}
+        <Toaster position="top-center" />
+      </body>
     </html>
   );
 }

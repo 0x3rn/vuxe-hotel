@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from 'react';
+import toast from 'react-hot-toast';
 import { useParams, useSearchParams } from 'next/navigation';
 import { doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -168,7 +169,7 @@ function RoomDetailContent() {
 
       // Admin Alert Email
       await addDoc(collection(db, "mail"), {
-        to: "concierge@luxehotel.com",
+        to: "somtoadmin@gmail.com",
         message: {
           subject: `🚨 ALERT: New Booking Request Received - ${ref}`,
           html: `
@@ -180,7 +181,7 @@ function RoomDetailContent() {
                 <p style="margin: 5px 0;"><strong>Room:</strong> ${room.name}</p>
                 <p style="margin: 5px 0;"><strong>Reference:</strong> ${ref}</p>
               </div>
-              <p>Please log in to the <a href="https://luxehotel.com/admin/bookings" style="color: #1d4ed8; text-decoration: underline;">Admin Dashboard</a> to review and confirm this reservation.</p>
+              <p>Please log in to the <a href="https://vuxe-hotel.vercel.app/admin/bookings" style="color: #1d4ed8; text-decoration: underline;">Admin Dashboard</a> to review and confirm this reservation.</p>
             </div>
           `
         }
@@ -189,7 +190,7 @@ function RoomDetailContent() {
       setBookingSuccess(true);
     } catch (error) {
       console.error("Error creating booking:", error);
-      alert("Failed to submit booking. Please try again.");
+      toast.error("Failed to submit booking. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
