@@ -171,10 +171,10 @@ export default function HomePage() {
           className="relative z-10 text-center text-white space-y-8 max-w-4xl px-6"
         >
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif tracking-wide leading-tight">
-            A Hidden Sanctuary in the Heart of the City
+            A Symphony of Luxury and Hospitality
           </h1>
           <p className="text-lg md:text-xl font-light text-zinc-200 max-w-2xl mx-auto">
-            Thoughtfully designed spaces, personalized hospitality, and unforgettable stays.
+            Discover a world of elegance and unparalled service in the hearth of paradise.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-4">
             <Link href="/rooms" className="border border-white text-white px-8 py-4 rounded-full uppercase text-sm tracking-widest font-medium hover:bg-white hover:text-black transition-colors w-full sm:w-auto shadow-xl">
