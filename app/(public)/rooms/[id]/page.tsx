@@ -171,7 +171,7 @@ function RoomDetailContent() {
       await addDoc(collection(db, "mail"), {
         to: "somtoadmin@gmail.com",
         message: {
-          subject: `🚨 ALERT: New Booking Request Received - ${ref}`,
+          subject: `ATTENTION REQUIRED: New Booking Request Received - ${ref}`,
           html: `
             <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
               <h2 style="color: #b91c1c; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">New Booking Alert</h2>
