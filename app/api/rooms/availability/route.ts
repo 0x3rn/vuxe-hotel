@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const reqCheckOut = new Date(checkOut).getTime();
 
     const bookingsSnapshot = await adminDb.collection("bookings")
-      .where("status", "in", ["Pending", "Approved"])
+      .where("status", "in", ["Pending", "Confirmed", "Approved"])
       .get();
     
     const overlappingCounts: Record<string, number> = {};

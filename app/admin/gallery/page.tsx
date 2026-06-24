@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Plus, Trash2, Edit2, X } from 'lucide-react';
-import Image from 'next/image';
+import MediaDisplay from '@/components/MediaDisplay';
+import MediaInput from '@/components/admin/MediaInput';
 import toast from 'react-hot-toast';
 
 type GalleryImage = {
@@ -112,7 +113,7 @@ export default function AdminGalleryPage() {
           onClick={() => handleOpenModal()}
           className="bg-primary text-primary-foreground px-4 py-2 rounded flex items-center gap-2 hover:bg-primary/90 transition-colors"
         >
-          <Plus size={18} /> Add Image
+          <Plus size={18} /> Add Media
         </button>
       </div>
 
@@ -125,7 +126,7 @@ export default function AdminGalleryPage() {
           {images.map((image) => (
             <div key={image.id} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden group relative flex flex-col">
               <div className="relative aspect-square w-full">
-                <Image src={image.imageUrl} alt="Gallery item" fill className="object-cover" />
+                <MediaDisplay src={image.imageUrl} alt="Gallery item" fill />
               </div>
               <div className="p-4 flex justify-between items-center bg-gray-50 border-t border-gray-100">
                 <span className="text-sm font-medium text-gray-500">Order: {image.order}</span>
@@ -148,7 +149,7 @@ export default function AdminGalleryPage() {
           ))}
           {images.length === 0 && (
             <div className="col-span-full py-12 text-center text-gray-500 bg-white rounded-lg border border-gray-100">
-              No images found in the gallery. Add some!
+              No media found in the gallery. Add some!
             </div>
           )}
         </div>
@@ -159,14 +160,16 @@ export default function AdminGalleryPage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="flex justify-between items-center p-6 border-b border-gray-100">
-              <h2 className="text-xl font-serif text-gray-900">{editingImage ? 'Edit Image' : 'Add New Image'}</h2>
+              <h2 className="text-xl font-serif text-gray-900">{editingImage ? 'Edit Media' : 'Add New Media'}</h2>
               <button onClick={handleCloseModal} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
             </div>
             <form onSubmit={handleSave} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                <input type="url" required value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" placeholder="https://images.unsplash.com/..." />
-              </div>
+              <MediaInput
+                label="Media (Image or Video)"
+                value={formData.imageUrl}
+                onChange={(url) => setFormData({...formData, imageUrl: url})}
+                required
+              />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Display Order</label>
                 <input type="number" onWheel={(e) => (e.target as HTMLInputElement).blur()} required value={formData.order} onChange={e => setFormData({...formData, order: Number(e.target.value)})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" />
@@ -174,7 +177,7 @@ export default function AdminGalleryPage() {
               
               <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
                 <button type="button" onClick={handleCloseModal} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors">Save Image</button>
+                <button type="submit" className="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors">Save Media</button>
               </div>
             </form>
           </div>

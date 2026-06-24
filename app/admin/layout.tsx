@@ -1,13 +1,20 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { Menu, X } from 'lucide-react';
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, loading, logout } = useAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Close mobile menu on route change
+  React.useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   if (loading) {
     return (
@@ -26,13 +33,32 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="flex h-screen bg-gray-50 text-gray-900 font-sans">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 text-gray-900 font-sans w-full">
+      {/* Mobile Header */}
+      <div className="md:hidden sticky top-0 flex items-center justify-between bg-secondary p-4 text-primary z-40 h-16 shadow-sm w-full">
+        <div className="text-xl font-serif">Luxe Admin</div>
+        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -mr-2 text-primary focus:outline-none">
+          <Menu className="w-6 h-6" />
+        </button>
+      </div>
+
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-50 md:hidden backdrop-blur-sm" 
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-secondary text-secondary-foreground flex flex-col">
-        <div className="p-6 text-2xl font-serif text-primary border-b border-secondary-foreground/20">
-          Luxe Admin
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 shrink-0 bg-secondary text-secondary-foreground flex flex-col transform transition-transform duration-300 ease-in-out md:sticky md:top-0 md:h-screen md:self-start md:translate-x-0 overflow-y-auto ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-6 text-2xl font-serif text-primary border-b border-secondary-foreground/20 flex justify-between items-center h-16 md:h-auto">
+          <span>Luxe Admin</span>
+          <button className="md:hidden text-secondary-foreground/70 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>
+            <X className="w-6 h-6" />
+          </button>
         </div>
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
+        <nav className="flex-1 p-4 space-y-2">
           <Link href="/admin/dashboard" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/dashboard' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Dashboard
           </Link>
@@ -93,7 +119,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       </aside>
       
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto p-8">
+      <main className="flex-1 p-4 md:p-8 w-full">
         {children}
       </main>
     </div>

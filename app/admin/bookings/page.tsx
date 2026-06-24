@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { Search, Eye, CheckCircle, XCircle, Clock, Calendar, DollarSign, Activity } from 'lucide-react';
+import { Search, Eye, CheckCircle, XCircle, Activity, LogIn, LogOut, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import BookingDrawer from '@/components/admin/BookingDrawer';
-import { isToday, isThisWeek, isThisMonth, parseISO, isFuture, isPast } from 'date-fns';
+import { isToday, parseISO, isPast } from 'date-fns';
 
 type Booking = {
   id: string;
@@ -13,6 +13,7 @@ type Booking = {
   phone?: string;
   roomId: string;
   roomName: string;
+  assignedRoomNumber?: string;
   checkInDate?: string;
   checkIn?: string;
   checkOutDate?: string;
@@ -21,6 +22,11 @@ type Booking = {
   status: string; // 'Pending', 'Confirmed', 'Guest Cancelled', 'System Cancelled', 'Completed'
   createdAt?: any;
   bookingRef?: string;
+  checkedIn?: boolean;
+  checkedOut?: boolean;
+  checkInTime?: string;
+  checkOutTime?: string;
+  cancelledTime?: string;
 };
 
 const CountdownBadge = ({ createdAt }: { createdAt: any }) => {
@@ -56,10 +62,8 @@ const CountdownBadge = ({ createdAt }: { createdAt: any }) => {
     return () => clearInterval(interval);
   }, [createdAt]);
 
-  if (expired) {
-    return <span className="text-xs bg-red-50 text-red-800 px-2 py-1 rounded font-medium border border-red-200 shadow-sm">⚠️ Expired</span>;
-  }
-  return <span className="text-xs bg-amber-50 text-amber-800 px-2 py-1 rounded font-medium border border-amber-200 shadow-sm tracking-wide">⏳ {timeLeft}</span>;
+  if (expired) return <span className="text-xs bg-red-50 text-red-800 px-2 py-1 rounded font-medium border border-red-200">⚠️ Expired</span>;
+  return <span className="text-xs bg-amber-50 text-amber-800 px-2 py-1 rounded font-medium border border-amber-200">⏳ {timeLeft}</span>;
 };
 
 export default function AdminBookingsPage() {
@@ -67,8 +71,7 @@ export default function AdminBookingsPage() {
   const [loading, setLoading] = useState(true);
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [timeFilter, setTimeFilter] = useState('All');
+  const [activeTab, setActiveTab] = useState('Confirmed');
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const fetchBookings = async () => {
@@ -77,6 +80,8 @@ export default function AdminBookingsPage() {
       const res = await fetch('/api/admin/data?type=bookings');
       if (!res.ok) throw new Error('Failed to fetch bookings');
       const data = await res.json();
+      // sort by date descending
+      data.sort((a: any, b: any) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
       setBookings(data);
     } catch (error) {
       console.error("Error fetching bookings:", error);
@@ -94,15 +99,21 @@ export default function AdminBookingsPage() {
       const booking = bookings.find(b => b.id === id);
       if (!booking) return;
 
+      const payload: any = {
+        type: 'bookings',
+        id,
+        status: newStatus,
+        bookingData: booking
+      };
+
+      if (newStatus.includes('Cancelled')) {
+        payload.cancelledTime = new Date().toISOString();
+      }
+
       const res = await fetch('/api/admin/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'bookings',
-          id,
-          status: newStatus,
-          bookingData: booking
-        })
+        body: JSON.stringify(payload)
       });
       
       if (!res.ok) throw new Error('Failed to update status');
@@ -115,66 +126,86 @@ export default function AdminBookingsPage() {
     }
   };
 
-  // Safe parse ISO date
+  const handleCheckAction = async (id: string, action: 'checkIn' | 'checkOut') => {
+    try {
+      const booking = bookings.find(b => b.id === id);
+      if (!booking) return;
+
+      const payload: any = {
+        type: 'bookings',
+        id,
+        bookingData: booking
+      };
+
+      if (action === 'checkIn') {
+        payload.checkedIn = true;
+        payload.checkInTime = new Date().toISOString();
+      } else {
+        payload.checkedOut = true;
+        payload.checkOutTime = new Date().toISOString();
+      }
+
+      const res = await fetch('/api/admin/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      if (!res.ok) throw new Error('Failed to perform action');
+
+      fetchBookings();
+      toast.success(`Guest ${action === 'checkIn' ? 'checked in' : 'checked out'} successfully!`);
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to update booking.");
+    }
+  };
+
   const parseDate = (d: string | undefined) => {
     if (!d) return new Date();
     try { return parseISO(d); } catch { return new Date(d); }
   }
 
-  const filteredBookings = bookings.filter(b => {
-    // Search
-    const matchesSearch = !searchTerm || 
-      b.guestName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      b.email.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (b.bookingRef && b.bookingRef.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    if (!matchesSearch) return false;
+  const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+  const now = new Date();
 
-    // Status Filter
-    if (statusFilter !== 'All' && b.status !== statusFilter) return false;
+  // Categorize bookings for tabs
+  const getTabCategory = (b: Booking) => {
+    if (b.status === 'Pending') return 'Pending';
+    if (b.status.includes('Cancelled')) return 'Cancelled';
 
-    // Time Filter (using checkIn date)
-    const checkInDate = parseDate(b.checkInDate || b.checkIn);
+    const inD = parseDate(b.checkInDate || b.checkIn);
     
-    if (timeFilter === 'Today') {
-      if (!isToday(checkInDate)) return false;
-    } else if (timeFilter === 'This Week') {
-      if (!isThisWeek(checkInDate)) return false;
-    } else if (timeFilter === 'This Month') {
-      if (!isThisMonth(checkInDate)) return false;
-    } else if (timeFilter === 'Upcoming') {
-      if (!isFuture(checkInDate) && !isToday(checkInDate)) return false;
-    } else if (timeFilter === 'Completed') {
-      const checkOutDate = parseDate(b.checkOutDate || b.checkOut);
-      if (!isPast(checkOutDate)) return false;
+    if (b.checkedIn && !b.checkedOut) return 'Checked-In';
+    
+    if (b.checkedOut) {
+      const outTime = b.checkOutTime ? new Date(b.checkOutTime).getTime() : now.getTime();
+      if (now.getTime() - outTime <= FORTY_EIGHT_HOURS) {
+        return 'Checked-Out';
+      }
+      return 'Completed'; // Falls into history
     }
 
-    return true;
+    if (b.status === 'Confirmed') {
+      const arrivingTodayOrPast = isToday(inD) || isPast(inD);
+      if (arrivingTodayOrPast) return 'Not Yet Checked-In';
+      return 'Confirmed';
+    }
+
+    return 'Other';
+  };
+
+  const filteredBookings = bookings.filter(b => {
+    if (searchTerm && !b.guestName.toLowerCase().includes(searchTerm.toLowerCase()) && !b.bookingRef?.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+
+    if (activeTab === 'Booking History') return true;
+    
+    return getTabCategory(b) === activeTab;
   });
 
-  // Calculate top aggregate metrics
-  const metrics = useMemo(() => {
-    let pending = 0;
-    let confirmed = 0;
-    let cancelled = 0;
-    let completed = 0;
-    let revenue = 0;
-
-    bookings.forEach(b => {
-      if (b.status === 'Pending') pending++;
-      if (b.status === 'Confirmed') {
-        confirmed++;
-        revenue += b.totalPrice || 0;
-      }
-      if (b.status === 'Completed') {
-        completed++;
-        revenue += b.totalPrice || 0;
-      }
-      if (b.status.includes('Cancelled')) cancelled++;
-    });
-
-    return { total: bookings.length, pending, confirmed, completed, cancelled, revenue };
-  }, [bookings]);
+  const tabs = ['Pending', 'Confirmed', 'Not Yet Checked-In', 'Checked-In', 'Checked-Out', 'Booking History'];
 
   return (
     <div className="space-y-8">
@@ -182,73 +213,33 @@ export default function AdminBookingsPage() {
         <h1 className="text-3xl font-serif text-primary">Manage Bookings</h1>
       </div>
 
-      {/* TOP AGGREGATE METRICS */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex flex-col">
-          <span className="text-xs text-gray-500 uppercase font-bold mb-1">Total Bookings</span>
-          <span className="text-2xl font-serif text-gray-900">{metrics.total}</span>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-amber-100 shadow-sm flex flex-col">
-          <span className="text-xs text-amber-600 uppercase font-bold mb-1">Pending</span>
-          <span className="text-2xl font-serif text-amber-700">{metrics.pending}</span>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm flex flex-col">
-          <span className="text-xs text-emerald-600 uppercase font-bold mb-1">Confirmed</span>
-          <span className="text-2xl font-serif text-emerald-700">{metrics.confirmed}</span>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-red-100 shadow-sm flex flex-col">
-          <span className="text-xs text-red-600 uppercase font-bold mb-1">Cancelled</span>
-          <span className="text-2xl font-serif text-red-700">{metrics.cancelled}</span>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex flex-col">
-          <span className="text-xs text-blue-600 uppercase font-bold mb-1">Completed</span>
-          <span className="text-2xl font-serif text-blue-700">{metrics.completed}</span>
-        </div>
-        <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm flex flex-col hidden md:flex">
-          <span className="text-xs text-blue-600 uppercase font-bold mb-1">Total Revenue</span>
-          <span className="text-2xl font-serif text-blue-700">${metrics.revenue.toLocaleString()}</span>
-        </div>
-      </div>
-
       {/* FILTERS */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col space-y-4">
         <div className="flex flex-col md:flex-row justify-between gap-4">
           <div className="flex flex-wrap gap-2">
-            {['All', 'Pending', 'Confirmed', 'Completed', 'Guest Cancelled', 'System Cancelled'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setStatusFilter(tab)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${statusFilter === tab ? 'bg-primary text-primary-foreground' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-              >
-                {tab}
-              </button>
-            ))}
+            {tabs.map(tab => {
+              const count = tab === 'Booking History' ? bookings.length : bookings.filter(b => getTabCategory(b) === tab).length;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === tab ? 'bg-primary text-primary-foreground shadow-md' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border border-gray-200'}`}
+                >
+                  {tab}
+                  <span className={`px-2 py-0.5 rounded-full text-xs ${activeTab === tab ? 'bg-white/20' : 'bg-gray-200'}`}>{count}</span>
+                </button>
+              );
+            })}
           </div>
           <div className="w-full md:w-72 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
-              placeholder="Search name, email, or ref..."
+              placeholder="Search name or ref..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full border border-gray-200 rounded-full pl-9 pr-4 py-1.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full border border-gray-200 rounded-lg pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2 border-t border-gray-100 pt-4">
-          <Calendar size={14} className="text-gray-400" />
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wider mr-2">Time Filters:</span>
-          <div className="flex flex-wrap gap-2">
-            {['All', 'Today', 'This Week', 'This Month', 'Upcoming', 'Completed'].map(tab => (
-              <button
-                key={tab}
-                onClick={() => setTimeFilter(tab)}
-                className={`px-3 py-1 rounded text-xs font-medium transition-colors ${timeFilter === tab ? 'bg-zinc-800 text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
-              >
-                {tab}
-              </button>
-            ))}
           </div>
         </div>
       </div>
@@ -259,14 +250,14 @@ export default function AdminBookingsPage() {
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+          <table className="w-full text-left min-w-[1000px] border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
-                <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+                <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Room Assignment</th>
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
-                <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamps</th>
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</th>
               </tr>
@@ -275,23 +266,43 @@ export default function AdminBookingsPage() {
               {filteredBookings.map((booking) => {
                 const cIn = booking.checkInDate || booking.checkIn;
                 const cOut = booking.checkOutDate || booking.checkOut;
+                
+                const fmtDate = (d: string | undefined) => {
+                  if (!d) return '-';
+                  const dt = new Date(d);
+                  return dt.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                };
+
                 return (
                 <tr key={booking.id} className="hover:bg-gray-50/50">
                   <td className="py-4 px-6">
                     <div className="font-medium text-gray-900">{booking.guestName}</div>
                     <div className="text-xs text-gray-500">{booking.email}</div>
-                    {booking.phone && <div className="text-xs text-gray-500">{booking.phone}</div>}
                     {booking.bookingRef && <div className="text-xs font-mono text-zinc-500 mt-1">Ref: {booking.bookingRef}</div>}
                   </td>
                   <td className="py-4 px-6">
-                    <div className="text-gray-900">{booking.roomName}</div>
+                    <div className="text-sm font-medium text-gray-900">{booking.roomName}</div>
+                    {booking.assignedRoomNumber ? (
+                      <div className="text-xs text-emerald-600 font-medium flex items-center gap-1 mt-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span> {booking.assignedRoomNumber}
+                      </div>
+                    ) : (
+                      <div className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-amber-500"></span> Unassigned
+                      </div>
+                    )}
                   </td>
                   <td className="py-4 px-6">
                     <div className="text-sm text-gray-600">{cIn}</div>
                     <div className="text-xs text-gray-400">to {cOut}</div>
                   </td>
-                  <td className="py-4 px-6 text-gray-900 font-medium">
-                    ${booking.totalPrice}
+                  <td className="py-4 px-6">
+                    <div className="text-xs text-gray-500 space-y-1">
+                      {booking.checkInTime && <div><span className="font-medium">In:</span> {fmtDate(booking.checkInTime)}</div>}
+                      {booking.checkOutTime && <div><span className="font-medium">Out:</span> {fmtDate(booking.checkOutTime)}</div>}
+                      {booking.cancelledTime && <div className="text-red-600"><span className="font-medium">Cancelled:</span> {fmtDate(booking.cancelledTime)}</div>}
+                      {!booking.checkInTime && !booking.checkOutTime && !booking.cancelledTime && <span>-</span>}
+                    </div>
                   </td>
                   <td className="py-4 px-6 flex flex-col items-start gap-2">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
@@ -309,28 +320,30 @@ export default function AdminBookingsPage() {
                   <td className="py-4 px-6 text-right space-x-2">
                     <button 
                       onClick={() => setSelectedBooking(booking)} 
-                      className="text-emerald-600 hover:text-emerald-800 transition-colors p-1"
+                      className="text-gray-600 hover:text-primary transition-colors p-1"
                       title="View Details"
                     >
                       <Eye size={20} />
                     </button>
                     {booking.status === 'Pending' && (
                       <>
-                        <button 
-                          onClick={() => handleUpdateStatus(booking.id, 'Confirmed')} 
-                          className="text-green-600 hover:text-green-800 transition-colors p-1"
-                          title="Confirm Booking"
-                        >
+                        <button onClick={() => handleUpdateStatus(booking.id, 'Confirmed')} className="text-green-600 hover:text-green-800 transition-colors p-1" title="Confirm Booking">
                           <CheckCircle size={20} />
                         </button>
-                        <button 
-                          onClick={() => handleUpdateStatus(booking.id, 'Cancelled')} 
-                          className="text-red-600 hover:text-red-800 transition-colors p-1"
-                          title="Cancel Booking"
-                        >
+                        <button onClick={() => handleUpdateStatus(booking.id, 'System Cancelled')} className="text-red-600 hover:text-red-800 transition-colors p-1" title="Cancel Booking">
                           <XCircle size={20} />
                         </button>
                       </>
+                    )}
+                    {getTabCategory(booking) === 'Not Yet Checked-In' && (
+                      <button onClick={() => handleCheckAction(booking.id, 'checkIn')} className="bg-emerald-600 text-white hover:bg-emerald-700 px-3 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-1 inline-flex">
+                        <LogIn size={14} /> Check In
+                      </button>
+                    )}
+                    {getTabCategory(booking) === 'Checked-In' && (
+                      <button onClick={() => handleCheckAction(booking.id, 'checkOut')} className="bg-amber-600 text-white hover:bg-amber-700 px-3 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-1 inline-flex">
+                        <LogOut size={14} /> Check Out
+                      </button>
                     )}
                   </td>
                 </tr>
@@ -339,7 +352,7 @@ export default function AdminBookingsPage() {
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-gray-500">
                     <Activity size={32} className="mx-auto text-gray-300 mb-2" />
-                    <p>No bookings match the current filters.</p>
+                    <p>No bookings match the current tab filter.</p>
                   </td>
                 </tr>
               )}
@@ -348,11 +361,17 @@ export default function AdminBookingsPage() {
         </div>
       )}
 
-      {/* Drawer */}
       {selectedBooking && (
         <>
-          <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setSelectedBooking(null)} />
-          <BookingDrawer booking={selectedBooking} onClose={() => setSelectedBooking(null)} />
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40" onClick={() => setSelectedBooking(null)} />
+          <BookingDrawer 
+            booking={selectedBooking} 
+            onClose={() => setSelectedBooking(null)} 
+            onSave={() => {
+              setSelectedBooking(null);
+              fetchBookings();
+            }}
+          />
         </>
       )}
     </div>

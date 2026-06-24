@@ -66,6 +66,8 @@ export async function POST(request: Request) {
           <p style="margin-top: 20px;"><strong>Exclusive Transport Service</strong></p>
           <p>As a confirmed guest, you are invited to book our private chauffeur service. Please use your email and Booking Reference to request a ride.</p>
         ` : '';
+         const roomAssignmentDisplay = b.assignedRoomNumber ? `<p style="margin: 5px 0; color: #10b981;"><strong>Assigned Room:</strong> ${b.assignedRoomNumber}</p>` : '';
+
         await adminDb.collection("mail").add({
           to: b.email,
           message: {
@@ -77,6 +79,7 @@ export async function POST(request: Request) {
                 <p>We are delighted to confirm your reservation for the <strong>${b.roomName}</strong>.</p>
                 ${refDisplay}
                 <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                  ${roomAssignmentDisplay}
                   <p style="margin: 5px 0;"><strong>Check-in:</strong> ${b.checkInDate}</p>
                   <p style="margin: 5px 0;"><strong>Check-out:</strong> ${b.checkOutDate}</p>
                   <p style="margin: 5px 0;"><strong>Total Price:</strong> $${b.totalPrice.toLocaleString()}</p>
@@ -97,8 +100,37 @@ export async function POST(request: Request) {
       await adminDb.collection("transport_requests").doc(id).update({ status });
       return NextResponse.json({ success: true });
     }
+
+    if (type === 'rooms') {
+      const { roomData } = body;
+      await adminDb.collection("rooms").doc(id).set(roomData);
+      return NextResponse.json({ success: true });
+    }
     
     return NextResponse.json({ error: 'Invalid type parameter' }, { status: 400 });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  if (!adminDb) return NextResponse.json({ error: 'Firebase admin not initialized' }, { status: 500 });
+  
+  try {
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get('type');
+    const id = searchParams.get('id');
+
+    if (!type || !id) {
+      return NextResponse.json({ error: 'Missing type or id' }, { status: 400 });
+    }
+
+    if (type === 'rooms') {
+      await adminDb.collection("rooms").doc(id).delete();
+      return NextResponse.json({ success: true });
+    }
+
+    return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

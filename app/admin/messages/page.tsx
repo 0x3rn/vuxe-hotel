@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Mail, Trash2, Clock, Search, Send, Inbox, Archive, CheckCircle2, User, Phone, FileText } from 'lucide-react';
+import { Mail, Trash2, Clock, Search, Send, Inbox, Archive, CheckCircle2, User, ArrowLeft, Reply } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 type ContactMessage = {
@@ -155,10 +155,10 @@ export default function InquiriesPage() {
         <h1 className="text-3xl font-serif text-primary">Inbox</h1>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col md:flex-row relative">
         
         {/* LEFT PANE: Folder & List */}
-        <div className="w-1/3 border-r border-gray-200 flex flex-col bg-gray-50/30">
+        <div className={`w-full md:w-1/3 border-b md:border-b-0 md:border-r border-gray-200 flex-col bg-gray-50/30 ${selectedMessageId ? 'hidden md:flex' : 'flex'}`}>
           
           {/* Header & Search */}
           <div className="p-4 border-b border-gray-200 space-y-4 shrink-0">
@@ -219,12 +219,18 @@ export default function InquiriesPage() {
         </div>
 
         {/* RIGHT PANE: Conversation View */}
-        <div className="flex-1 flex flex-col bg-white overflow-hidden">
+        <div className={`flex-1 flex-col bg-white overflow-hidden ${!selectedMessageId ? 'hidden md:flex' : 'flex'}`}>
           {selectedMessage ? (
             <>
               {/* Toolbar */}
               <div className="p-4 border-b border-gray-100 flex justify-between items-center shrink-0">
                 <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => setSelectedMessageId(null)} 
+                    className="md:hidden p-2 -ml-2 text-gray-500 hover:text-gray-800"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
                     {selectedMessage.firstName[0]}{selectedMessage.lastName[0]}
                   </div>

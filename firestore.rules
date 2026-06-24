@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Publicly Readable Collections
+    match /rooms/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /experiences/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /gallery/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /offers/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /social/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Completely Locked Collections (Admin Access Only)
+    match /bookings/{document=**} {
+      allow read, write: if request.auth != null; 
+    }
+    match /mail/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    match /transport_requests/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    match /messages/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

@@ -21,10 +21,10 @@ export default function RoomDrawer({ room, onClose }: { room: any, onClose: () =
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const q = query(collection(db, "bookings"), where("roomId", "==", room.id));
-        const snap = await getDocs(q);
-        const b: Booking[] = [];
-        snap.forEach(doc => b.push({ id: doc.id, ...doc.data() } as Booking));
+        const res = await fetch('/api/admin/data?type=bookings');
+        if (!res.ok) throw new Error('Failed to fetch bookings');
+        const allBookings = await res.json();
+        const b: Booking[] = allBookings.filter((doc: any) => doc.roomId === room.id);
         
         // sort by checkIn desc
         b.sort((x, y) => {
