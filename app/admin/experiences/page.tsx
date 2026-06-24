@@ -5,6 +5,8 @@ import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import MediaInput from '@/components/admin/MediaInput';
+import MediaDisplay from '@/components/MediaDisplay';
 
 type Experience = {
   id: string;
@@ -137,6 +139,7 @@ export default function AdminExperiencesPage() {
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider w-20">Order</th>
+                <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Media</th>
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Experience Title</th>
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</th>
@@ -146,6 +149,11 @@ export default function AdminExperiencesPage() {
               {experiences.map((experience) => (
                 <tr key={experience.id} className="hover:bg-gray-50/50">
                   <td className="py-4 px-6 text-gray-600 font-medium">{experience.order}</td>
+                  <td className="py-4 px-6">
+                    <div className="w-16 h-12 relative rounded overflow-hidden shadow-sm border border-gray-200">
+                      <MediaDisplay src={experience.imageUrl} alt={experience.title} fill />
+                    </div>
+                  </td>
                   <td className="py-4 px-6">
                     <div className="font-medium text-gray-900">{experience.title}</div>
                     <div className="text-xs text-gray-500">{experience.id}</div>
@@ -202,10 +210,12 @@ export default function AdminExperiencesPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none resize-none" rows={3}></textarea>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                <input type="text" required value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" />
-              </div>
+              <MediaInput
+                label="Experience Media"
+                value={formData.imageUrl}
+                onChange={(url) => setFormData({...formData, imageUrl: url})}
+                required
+              />
               
               <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-6">
                 <button type="button" onClick={handleCloseModal} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded transition-colors">Cancel</button>

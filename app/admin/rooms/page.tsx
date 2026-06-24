@@ -3,8 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
+import MediaInput from '@/components/admin/MediaInput';
+import MediaDisplay from '@/components/MediaDisplay';
+import RoomDrawer from '@/components/admin/RoomDrawer';
 
 type Room = {
   id: string;
@@ -25,6 +28,9 @@ export default function AdminRoomsPage() {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  
+  // Drawer state
+  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -156,6 +162,7 @@ export default function AdminRoomsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Media</th>
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Room Name</th>
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Price/Night</th>
                 <th className="py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
@@ -167,6 +174,11 @@ export default function AdminRoomsPage() {
             <tbody className="divide-y divide-gray-100">
               {rooms.map((room) => (
                 <tr key={room.id} className="hover:bg-gray-50/50">
+                  <td className="py-4 px-6">
+                    <div className="w-16 h-12 relative rounded overflow-hidden shadow-sm border border-gray-200">
+                      <MediaDisplay src={room.imageUrl} alt={room.name} fill />
+                    </div>
+                  </td>
                   <td className="py-4 px-6">
                     <div className="font-medium text-gray-900">{room.name}</div>
                     <div className="text-sm text-gray-500 truncate max-w-xs">{room.id}</div>
@@ -180,10 +192,13 @@ export default function AdminRoomsPage() {
                     </span>
                   </td>
                   <td className="py-4 px-6 text-right space-x-3">
-                    <button onClick={() => handleOpenModal(room)} className="text-blue-600 hover:text-blue-800 transition-colors">
+                    <button onClick={() => setSelectedRoom(room)} className="text-emerald-600 hover:text-emerald-800 transition-colors" title="View Details">
+                      <Eye size={18} />
+                    </button>
+                    <button onClick={() => handleOpenModal(room)} className="text-blue-600 hover:text-blue-800 transition-colors" title="Edit">
                       <Edit2 size={18} />
                     </button>
-                    <button onClick={() => handleDelete(room.id)} className="text-red-600 hover:text-red-800 transition-colors">
+                    <button onClick={() => handleDelete(room.id)} className="text-red-600 hover:text-red-800 transition-colors" title="Delete">
                       <Trash2 size={18} />
                     </button>
                   </td>
@@ -246,10 +261,12 @@ export default function AdminRoomsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Amenities (comma separated)</label>
                 <input type="text" value={formData.amenities} onChange={e => setFormData({...formData, amenities: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" placeholder="Wifi, Pool, Minibar" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL</label>
-                <input type="text" required value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 focus:border-primary focus:outline-none" />
-              </div>
+              <MediaInput
+                label="Room Media"
+                value={formData.imageUrl}
+                onChange={(url) => setFormData({...formData, imageUrl: url})}
+                required
+              />
               <div className="flex items-center gap-2">
                 <input type="checkbox" id="isAvailable" checked={formData.isAvailable} onChange={e => setFormData({...formData, isAvailable: e.target.checked})} className="rounded text-primary focus:ring-primary" />
                 <label htmlFor="isAvailable" className="text-sm font-medium text-gray-700">Room is Available</label>
@@ -261,6 +278,14 @@ export default function AdminRoomsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Drawer */}
+      {selectedRoom && (
+        <>
+          <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setSelectedRoom(null)} />
+          <RoomDrawer room={selectedRoom} onClose={() => setSelectedRoom(null)} />
+        </>
       )}
     </div>
   );

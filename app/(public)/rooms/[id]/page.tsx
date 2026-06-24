@@ -27,6 +27,7 @@ function RoomDetailContent() {
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [availableInventory, setAvailableInventory] = useState<number | null>(null);
+  const [applicableOffer, setApplicableOffer] = useState<any>(null);
 
   // Booking Form State
   const [checkIn, setCheckIn] = useState(searchParams.get('checkIn') || '');
@@ -45,7 +46,17 @@ function RoomDetailContent() {
         const docRef = doc(db, "rooms", id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setRoom({ id: docSnap.id, ...docSnap.data() } as Room);
+          const roomData = { id: docSnap.id, ...docSnap.data() } as Room;
+          setRoom(roomData);
+
+          // Fetch Offers
+          const q = query(collection(db, "offers"), where("isActive", "==", true));
+          const offersSnap = await getDocs(q);
+          const offers: any[] = [];
+          offersSnap.forEach(d => offers.push({ id: d.id, ...d.data() }));
+          
+          const offer = offers.find(o => o.applicableRoomIds?.includes('all') || o.applicableRoomIds?.includes(roomData.id));
+          if (offer) setApplicableOffer(offer);
         }
       } catch (error) {
         console.error("Error fetching room:", error);
@@ -104,18 +115,47 @@ function RoomDetailContent() {
     checkAvailability();
   }, [room, checkIn, checkOut, id]);
 
-  const calculateTotal = () => {
-    if (!checkIn || !checkOut || !room) return 0;
+  const getNights = () => {
+    if (!checkIn || !checkOut) return 0;
     const start = new Date(checkIn);
     const end = new Date(checkOut);
-    const nights = differenceInDays(end, start);
-    if (nights <= 0) return 0;
-    return nights * room.pricePerNight;
+    return Math.max(0, differenceInDays(end, start));
+  };
+
+  const calculateTotals = () => {
+    const nights = getNights();
+    if (nights <= 0 || !room) return { rawTotal: 0, discount: 0, finalTotal: 0, offerApplied: false };
+    
+    const rawTotal = nights * room.pricePerNight;
+    let discount = 0;
+    let offerApplied = false;
+
+    if (applicableOffer && nights >= applicableOffer.minNights) {
+      discount = (rawTotal * applicableOffer.discountPercentage) / 100;
+      offerApplied = true;
+    }
+
+    return { rawTotal, discount, finalTotal: rawTotal - discount, offerApplied };
   };
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!room || !checkIn || !checkOut || !guestName || !email) return;
+    if (!room || !checkIn || !checkOut) {
+      toast.error("Please select check-in and check-out dates.");
+      return;
+    }
+    if (!guestName.trim()) {
+      toast.error("Please provide your full name.");
+      return;
+    }
+    if (!email.trim()) {
+      toast.error("Please provide your email address.");
+      return;
+    }
+    if (!phone.trim()) {
+      toast.error("Please provide your phone number.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -126,6 +166,8 @@ function RoomDetailContent() {
         ref += chars.charAt(Math.floor(Math.random() * chars.length));
       }
 
+      const { rawTotal, discount, finalTotal, offerApplied } = calculateTotals();
+
       const bookingData = {
         roomId: room.id,
         roomName: room.name,
@@ -134,7 +176,10 @@ function RoomDetailContent() {
         phone,
         checkInDate: checkIn,
         checkOutDate: checkOut,
-        totalPrice: calculateTotal(),
+        rawTotal,
+        discountApplied: discount,
+        offerAppliedId: offerApplied ? applicableOffer.id : null,
+        totalPrice: finalTotal,
         status: 'Pending',
         createdAt: serverTimestamp(),
         bookingRef: ref
@@ -157,7 +202,7 @@ function RoomDetailContent() {
                 <p style="margin: 5px 0;"><strong>Booking Reference:</strong> ${ref}</p>
                 <p style="margin: 5px 0;"><strong>Check-in:</strong> ${checkIn}</p>
                 <p style="margin: 5px 0;"><strong>Check-out:</strong> ${checkOut}</p>
-                <p style="margin: 5px 0;"><strong>Estimated Total:</strong> $${calculateTotal().toLocaleString()}</p>
+                <p style="margin: 5px 0;"><strong>Estimated Total:</strong> $${finalTotal.toLocaleString()}</p>
               </div>
               <p>Our concierge team is reviewing your request and will contact you shortly to confirm your booking.</p>
               <br/>
@@ -212,7 +257,7 @@ function RoomDetailContent() {
     );
   }
 
-  const totalAmount = calculateTotal();
+  const { finalTotal } = calculateTotals();
   const isBookable = room.isAvailable && (availableInventory === null || availableInventory > 0);
 
   return (
@@ -261,6 +306,16 @@ function RoomDetailContent() {
             <div className="bg-white p-8 rounded-lg shadow-xl border border-zinc-100 sticky top-32">
               <h3 className="text-2xl font-serif text-zinc-900 mb-2">Reserve Your Stay</h3>
               <p className="text-zinc-500 text-sm mb-4">From ${room.pricePerNight} per night</p>
+
+              {applicableOffer && (
+                <div className="mb-6 bg-zinc-950 text-amber-500 p-4 rounded border border-amber-500/20 text-center text-sm shadow-inner">
+                  <span className="font-bold tracking-widest uppercase mb-1 block">Special Offer</span>
+                  <span className="text-zinc-300">{applicableOffer.description}</span>
+                  {applicableOffer.endDate && (
+                    <span className="block mt-2 text-xs text-amber-500/70 tracking-widest uppercase">Ends: {applicableOffer.endDate}</span>
+                  )}
+                </div>
+              )}
 
               {!isBookable && checkIn && checkOut && (
                 <div className="bg-red-50 text-red-700 p-3 rounded text-sm font-medium mb-6 border border-red-100">
@@ -333,47 +388,74 @@ function RoomDetailContent() {
 
                   <hr className="border-zinc-100" />
 
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-zinc-500 mb-2 font-medium">Full Name</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={guestName}
-                      onChange={(e) => setGuestName(e.target.value)}
-                      placeholder="John Doe"
-                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-sm bg-transparent" 
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-zinc-500 mb-2 font-medium">Email Address</label>
-                    <input 
-                      type="email" 
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="john@example.com"
-                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-sm bg-transparent" 
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-zinc-500 mb-2 font-medium">Phone (Optional)</label>
-                    <input 
-                      type="tel" 
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+1 (555) 000-0000"
-                      className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-sm bg-transparent" 
-                    />
-                  </div>
-
-                  {totalAmount > 0 && (
-                    <div className="bg-stone-50 p-4 rounded text-sm flex justify-between items-center text-zinc-900 border border-stone-100">
-                      <span>Total for {differenceInDays(new Date(checkOut), new Date(checkIn))} nights:</span>
-                      <span className="font-medium text-lg">${totalAmount}</span>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Full Name *</label>
+                      <input 
+                        type="text" 
+                        value={guestName} 
+                        onChange={e => setGuestName(e.target.value)} 
+                        required 
+                        className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-sm bg-transparent" 
+                        placeholder="John Doe" 
+                      />
                     </div>
-                  )}
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Email Address *</label>
+                      <input 
+                        type="email" 
+                        value={email} 
+                        onChange={e => setEmail(e.target.value)} 
+                        required 
+                        className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-sm bg-transparent" 
+                        placeholder="john@example.com" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">Phone Number *</label>
+                      <input 
+                        type="tel" 
+                        value={phone} 
+                        onChange={e => setPhone(e.target.value)} 
+                        required 
+                        className="w-full border-b border-zinc-200 pb-2 focus:outline-none focus:border-primary text-sm bg-transparent" 
+                        placeholder="+1 (555) 000-0000" 
+                      />
+                    </div>
+                  </div>
+
+                  {(() => {
+                    const { rawTotal, discount, finalTotal, offerApplied } = calculateTotals();
+                    if (rawTotal > 0) {
+                      return (
+                        <div className="bg-stone-50 p-4 rounded text-sm flex flex-col gap-2 text-zinc-900 border border-stone-100">
+                          {offerApplied ? (
+                            <>
+                              <div className="flex justify-between items-center text-zinc-500">
+                                <span>{room.name}: ${room.pricePerNight} x {getNights()} nights</span>
+                                <span>${rawTotal.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-emerald-600 font-medium">
+                                <span>Offer: {applicableOffer.title}</span>
+                                <span>- ${discount.toLocaleString()}</span>
+                              </div>
+                              <hr className="border-stone-200 my-1" />
+                              <div className="flex justify-between items-center font-bold text-lg">
+                                <span>Total Price:</span>
+                                <span>${finalTotal.toLocaleString()}</span>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex justify-between items-center">
+                              <span>Total for {getNights()} nights:</span>
+                              <span className="font-medium text-lg">${rawTotal.toLocaleString()}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
 
                   <button 
                     type="submit" 

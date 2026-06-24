@@ -36,11 +36,17 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           <Link href="/admin/dashboard" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/dashboard' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Dashboard
           </Link>
-          <Link href="/admin/rooms" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/rooms' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
-            Rooms
+          <Link href="/admin/guests" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/guests' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
+            Guests
           </Link>
           <Link href="/admin/bookings" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/bookings' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Bookings
+          </Link>
+          <Link href="/admin/rooms" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/rooms' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
+            Rooms
+          </Link>
+          <Link href="/admin/transport" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/transport' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
+            Transport
           </Link>
           <Link href="/admin/messages" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/messages' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Inquiries
@@ -48,15 +54,22 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           <Link href="/admin/experiences" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/experiences' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Experiences
           </Link>
+          <Link href="/admin/offers" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/offers' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
+            Special Offers
+          </Link>
+          <Link href="/admin/analytics" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/analytics' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
+            Analytics
+          </Link>
           <Link href="/admin/gallery" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/gallery' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Gallery
           </Link>
           <Link href="/admin/social" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/social' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Social Feed
           </Link>
-          <Link href="/admin/transport" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/transport' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
-            Transport
+          <Link href="/admin/settings" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/settings' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
+            Site Settings
           </Link>
+          <div className="pt-4 mt-2 mb-2 border-t border-secondary-foreground/10"></div>
           <Link href="/admin/seed" className={`block px-4 py-2 rounded transition-colors ${pathname === '/admin/seed' ? 'bg-primary text-primary-foreground' : 'hover:bg-secondary-foreground/10'}`}>
             Database Seed
           </Link>

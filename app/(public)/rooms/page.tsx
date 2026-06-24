@@ -32,6 +32,7 @@ function RoomsList() {
   const guestsParam = searchParams.get('guests');
   
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -77,12 +78,24 @@ function RoomsList() {
         setRooms(roomsData);
       } catch (error) {
         console.error("Error fetching rooms:", error);
-      } finally {
         setLoading(false);
       }
     };
 
+    const fetchOffers = async () => {
+      try {
+        const q = query(collection(db, "offers"), where("isActive", "==", true));
+        const snap = await getDocs(q);
+        const o: any[] = [];
+        snap.forEach(doc => o.push({ id: doc.id, ...doc.data() }));
+        setOffers(o);
+      } catch (error) {
+        console.error("Error fetching offers:", error);
+      }
+    };
+
     fetchRoomsAndAvailability();
+    fetchOffers();
   }, [checkInParam, checkOutParam, guestsParam]);
 
   const hasFilters = checkInParam || checkOutParam || guestsParam;
@@ -124,6 +137,8 @@ function RoomsList() {
             if (checkOutParam) bookUrlParams.set('checkOut', checkOutParam);
             if (guestsParam) bookUrlParams.set('guests', guestsParam);
             const bookUrl = `/rooms/${room.id}${bookUrlParams.toString() ? `?${bookUrlParams.toString()}` : ''}`;
+            
+            const applicableOffer = offers.find(o => o.applicableRoomIds?.includes('all') || o.applicableRoomIds?.includes(room.id));
 
             return (
               <motion.div 
@@ -139,6 +154,11 @@ function RoomsList() {
                   {!isBookable && (
                     <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
                       <span className="text-white tracking-widest uppercase font-semibold">Fully Booked</span>
+                    </div>
+                  )}
+                  {isBookable && applicableOffer && (
+                    <div className="absolute top-4 left-4 bg-zinc-950/90 text-amber-500 backdrop-blur border border-amber-500/30 px-3 py-1.5 rounded shadow-sm text-[10px] uppercase font-semibold tracking-[0.2em] z-10">
+                      [ SPECIAL OFFER ]
                     </div>
                   )}
                   {isBookable && room.inventory !== undefined && room.inventory <= 3 && (

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Mail, Trash2, Clock, Search, AlertCircle, RefreshCw, Send, MessageCircleReply } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Mail, Trash2, Clock, Search, Send, Inbox, Archive, CheckCircle2, User, Phone, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 type ContactMessage = {
@@ -11,35 +11,37 @@ type ContactMessage = {
   email: string;
   subject: string;
   message: string;
-  createdAt: { seconds: number; nanoseconds: number } | null;
-  status: string;
+  createdAt: { seconds: number; nanoseconds: number } | null | string;
+  status: string; // 'unread', 'replied', 'archived'
 };
 
 export default function InquiriesPage() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  
+  const [activeFolder, setActiveFolder] = useState<'unread' | 'replied' | 'archived'>('unread');
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  
   const [replyText, setReplyText] = useState('');
   const [isSendingReply, setIsSendingReply] = useState(false);
 
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      setError(null);
-      
       const response = await fetch('/api/admin/messages');
-      if (!response.ok) {
-        throw new Error('Failed to fetch messages');
-      }
+      if (!response.ok) throw new Error('Failed to fetch messages');
       
       const data = await response.json();
-      setMessages(data.messages);
+      // Normalize status in case old ones are missing
+      const msgs = data.messages.map((m: any) => ({
+        ...m,
+        status: m.status || 'unread'
+      }));
+      setMessages(msgs);
     } catch (err: any) {
       console.error("Error fetching messages:", err);
-      setError(err.message || 'An error occurred while fetching messages');
+      toast.error("Failed to load messages");
     } finally {
       setLoading(false);
     }
@@ -54,6 +56,8 @@ export default function InquiriesPage() {
 
     try {
       setIsSendingReply(true);
+      const toastId = toast.loading('Sending reply...');
+      
       const response = await fetch('/api/admin/reply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,14 +70,11 @@ export default function InquiriesPage() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send reply');
-      }
+      if (!response.ok) throw new Error('Failed to send reply');
 
       setMessages(messages.map(m => m.id === msg.id ? { ...m, status: 'replied' } : m));
-      setReplyingTo(null);
       setReplyText('');
-      toast.success('Reply sent successfully!');
+      toast.success('Reply sent successfully!', { id: toastId });
     } catch (err: any) {
       console.error("Error sending reply:", err);
       toast.error('Failed to send reply: ' + err.message);
@@ -82,225 +83,233 @@ export default function InquiriesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
-      return;
-    }
-
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
-      setIsDeleting(id);
       const response = await fetch(`/api/contact/${id}`, {
-        method: 'DELETE',
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
       });
+      if (!response.ok) throw new Error('Failed to update status');
 
-      if (!response.ok) {
-        throw new Error('Failed to delete message');
+      setMessages(messages.map(m => m.id === id ? { ...m, status: newStatus } : m));
+      
+      // If we archive the selected message, clear selection
+      if (newStatus === 'archived' && activeFolder !== 'archived') {
+        setSelectedMessageId(null);
       }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update status');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Delete this message forever?')) return;
+    try {
+      const response = await fetch(`/api/contact/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Failed to delete');
 
       setMessages(messages.filter(msg => msg.id !== id));
-    } catch (err: any) {
-      console.error("Error deleting message:", err);
-      toast.error('Failed to delete message: ' + err.message);
-    } finally {
-      setIsDeleting(null);
+      if (selectedMessageId === id) setSelectedMessageId(null);
+      toast.success('Message deleted');
+    } catch (err) {
+      toast.error('Failed to delete');
     }
   };
 
-  const filteredMessages = messages.filter(msg => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      msg.firstName.toLowerCase().includes(searchLower) ||
-      msg.lastName.toLowerCase().includes(searchLower) ||
-      msg.email.toLowerCase().includes(searchLower) ||
-      msg.subject.toLowerCase().includes(searchLower) ||
-      msg.message.toLowerCase().includes(searchLower)
-    );
-  });
-
-  const formatDate = (timestamp: any) => {
-    if (!timestamp) return 'Unknown date';
-    // Handle Firestore timestamp format from API
-    const date = new Date(timestamp._seconds ? timestamp._seconds * 1000 : timestamp.seconds * 1000);
-    if (isNaN(date.getTime())) return 'Invalid date';
-    
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-    }).format(date);
+  const formatDate = (dateObj: any) => {
+    if (!dateObj) return 'Unknown Date';
+    if (typeof dateObj === 'string') return new Date(dateObj).toLocaleDateString();
+    return new Date(dateObj.seconds * 1000).toLocaleDateString();
   };
 
+  const filteredMessages = useMemo(() => {
+    return messages.filter(m => {
+      if (m.status !== activeFolder) return false;
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        return (
+          m.firstName.toLowerCase().includes(term) ||
+          m.lastName.toLowerCase().includes(term) ||
+          m.email.toLowerCase().includes(term) ||
+          m.subject.toLowerCase().includes(term)
+        );
+      }
+      return true;
+    }).sort((a, b) => {
+      // Sort newest first
+      const timeA = typeof a.createdAt === 'string' ? new Date(a.createdAt).getTime() : (a.createdAt?.seconds || 0);
+      const timeB = typeof b.createdAt === 'string' ? new Date(b.createdAt).getTime() : (b.createdAt?.seconds || 0);
+      return timeB - timeA;
+    });
+  }, [messages, activeFolder, searchTerm]);
+
+  const selectedMessage = useMemo(() => {
+    return messages.find(m => m.id === selectedMessageId) || null;
+  }, [messages, selectedMessageId]);
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-serif text-zinc-900 tracking-wide">Guest Inquiries</h1>
-          <p className="text-zinc-500 mt-1">Manage contact form submissions and guest questions.</p>
-        </div>
-        <button 
-          onClick={fetchMessages}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-zinc-200 text-zinc-700 rounded-md hover:bg-zinc-50 transition-colors shadow-sm text-sm font-medium"
-        >
-          <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
-          Refresh
-        </button>
+    <div className="h-[calc(100vh-6rem)] flex flex-col space-y-4">
+      <div className="flex justify-between items-center shrink-0">
+        <h1 className="text-3xl font-serif text-primary">Inbox</h1>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
-        {/* Toolbar */}
-        <div className="p-4 border-b border-zinc-200 bg-zinc-50 flex flex-col sm:flex-row justify-between gap-4">
-          <div className="relative w-full sm:w-96">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search messages..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-zinc-200 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
-            />
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex">
+        
+        {/* LEFT PANE: Folder & List */}
+        <div className="w-1/3 border-r border-gray-200 flex flex-col bg-gray-50/30">
+          
+          {/* Header & Search */}
+          <div className="p-4 border-b border-gray-200 space-y-4 shrink-0">
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              <button onClick={() => { setActiveFolder('unread'); setSelectedMessageId(null); }} className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-medium rounded-md transition-colors ${activeFolder === 'unread' ? 'bg-white shadow text-primary' : 'text-gray-500 hover:text-gray-700'}`}>
+                <Inbox size={14} /> Unread
+              </button>
+              <button onClick={() => { setActiveFolder('replied'); setSelectedMessageId(null); }} className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-medium rounded-md transition-colors ${activeFolder === 'replied' ? 'bg-white shadow text-primary' : 'text-gray-500 hover:text-gray-700'}`}>
+                <CheckCircle2 size={14} /> Replied
+              </button>
+              <button onClick={() => { setActiveFolder('archived'); setSelectedMessageId(null); }} className={`flex-1 flex items-center justify-center gap-2 py-1.5 text-xs font-medium rounded-md transition-colors ${activeFolder === 'archived' ? 'bg-white shadow text-primary' : 'text-gray-500 hover:text-gray-700'}`}>
+                <Archive size={14} /> Archive
+              </button>
+            </div>
+            
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+              <input
+                type="text"
+                placeholder="Search inquiries..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 text-sm bg-white border border-gray-200 rounded-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-zinc-500 font-medium">
-            <Mail size={16} />
-            <span>{filteredMessages.length} Messages</span>
+
+          {/* List */}
+          <div className="flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="p-8 text-center text-gray-500 text-sm">Loading messages...</div>
+            ) : filteredMessages.length === 0 ? (
+              <div className="p-8 text-center text-gray-500 text-sm flex flex-col items-center">
+                <Mail size={32} className="mb-2 text-gray-300" />
+                No {activeFolder} messages.
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {filteredMessages.map(msg => (
+                  <button
+                    key={msg.id}
+                    onClick={() => setSelectedMessageId(msg.id)}
+                    className={`w-full text-left p-4 transition-colors hover:bg-gray-50 ${selectedMessageId === msg.id ? 'bg-blue-50/50 hover:bg-blue-50/50 border-l-2 border-primary' : 'border-l-2 border-transparent'}`}
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <span className={`font-medium text-sm truncate pr-2 ${selectedMessageId === msg.id ? 'text-primary' : 'text-gray-900'}`}>
+                        {msg.firstName} {msg.lastName}
+                      </span>
+                      <span className="text-[10px] text-gray-400 whitespace-nowrap shrink-0">{formatDate(msg.createdAt)}</span>
+                    </div>
+                    <p className="text-xs font-medium text-gray-700 truncate mb-1">{msg.subject}</p>
+                    <p className="text-xs text-gray-500 truncate">{msg.message}</p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-0">
-          {loading ? (
-            <div className="p-12 text-center flex flex-col items-center justify-center text-zinc-500">
-              <RefreshCw size={32} className="animate-spin text-primary mb-4" />
-              <p>Loading inquiries...</p>
-            </div>
-          ) : error ? (
-            <div className="p-8 text-center text-red-600 bg-red-50 flex flex-col items-center">
-              <AlertCircle size={32} className="mb-2" />
-              <p>{error}</p>
-              <button 
-                onClick={fetchMessages}
-                className="mt-4 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-md transition-colors text-sm font-medium"
-              >
-                Try Again
-              </button>
-            </div>
-          ) : filteredMessages.length === 0 ? (
-            <div className="p-12 text-center flex flex-col items-center justify-center text-zinc-400 bg-zinc-50/50">
-              <Mail size={48} className="mb-4 opacity-20" />
-              <h3 className="text-lg font-medium text-zinc-700 mb-1">No messages found</h3>
-              <p className="text-sm">
-                {searchTerm ? "No inquiries match your search." : "Your inbox is empty."}
-              </p>
-              {searchTerm && (
-                <button 
-                  onClick={() => setSearchTerm('')}
-                  className="mt-4 text-primary hover:underline text-sm font-medium"
-                >
-                  Clear search
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="divide-y divide-zinc-100">
-              {filteredMessages.map((msg) => (
-                <div key={msg.id} className="p-6 hover:bg-zinc-50 transition-colors group">
-                  <div className="flex flex-col md:flex-row gap-6">
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="text-lg font-medium text-zinc-900">{msg.subject}</h3>
-                          <div className="flex items-center gap-2 mt-1 text-sm text-zinc-500">
-                            <span className="font-medium text-zinc-700">{msg.firstName} {msg.lastName}</span>
-                            <span>•</span>
-                            <a href={`mailto:${msg.email}?subject=${encodeURIComponent(`Re: Luxe Hotel Inquiry: ${msg.subject}`)}`} className="hover:text-primary transition-colors">{msg.email}</a>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {msg.status === 'replied' && (
-                            <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium flex items-center gap-1">
-                              <MessageCircleReply size={12} />
-                              Replied
-                            </span>
-                          )}
-                          <div className="flex items-center gap-2 text-xs text-zinc-400 whitespace-nowrap bg-zinc-100 px-3 py-1.5 rounded-full">
-                            <Clock size={14} />
-                            {formatDate(msg.createdAt)}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-white p-4 rounded-lg border border-zinc-100 shadow-sm">
-                        <p className="text-zinc-600 text-sm whitespace-pre-wrap leading-relaxed">{msg.message}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex md:flex-col items-center md:items-end justify-start md:justify-end gap-2 md:w-32 pt-2 md:pt-0">
-                      <button
-                        onClick={() => {
-                          setReplyingTo(replyingTo === msg.id ? null : msg.id);
-                          setReplyText('');
-                        }}
-                        className="flex items-center justify-center gap-2 w-full md:w-auto px-4 py-2 text-zinc-600 hover:bg-zinc-100 border border-zinc-200 rounded-md transition-colors text-sm font-medium"
-                      >
-                        <MessageCircleReply size={16} />
-                        <span className="md:hidden lg:inline">Reply</span>
-                      </button>
-                      <button
-                        onClick={() => handleDelete(msg.id)}
-                        disabled={isDeleting === msg.id}
-                        className="flex items-center justify-center gap-2 w-full md:w-auto px-4 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors text-sm font-medium disabled:opacity-50"
-                      >
-                        {isDeleting === msg.id ? (
-                          <RefreshCw size={16} className="animate-spin" />
-                        ) : (
-                          <Trash2 size={16} />
-                        )}
-                        <span className="md:hidden lg:inline">Delete</span>
-                      </button>
-                    </div>
+        {/* RIGHT PANE: Conversation View */}
+        <div className="flex-1 flex flex-col bg-white overflow-hidden">
+          {selectedMessage ? (
+            <>
+              {/* Toolbar */}
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
+                    {selectedMessage.firstName[0]}{selectedMessage.lastName[0]}
                   </div>
+                  <div>
+                    <h2 className="font-medium text-gray-900">{selectedMessage.firstName} {selectedMessage.lastName}</h2>
+                    <p className="text-xs text-gray-500">{selectedMessage.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedMessage.status !== 'archived' && (
+                    <button 
+                      onClick={() => handleUpdateStatus(selectedMessage.id, 'archived')}
+                      className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                      title="Archive"
+                    >
+                      <Archive size={18} />
+                    </button>
+                  )}
+                  {selectedMessage.status === 'archived' && (
+                    <button 
+                      onClick={() => handleUpdateStatus(selectedMessage.id, 'unread')}
+                      className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                      title="Move to Inbox"
+                    >
+                      <Inbox size={18} />
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => handleDelete(selectedMessage.id)}
+                    className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                    title="Delete"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              </div>
 
-                  {/* Inline Reply Form */}
-                  {replyingTo === msg.id && (
-                    <div className="mt-4 bg-zinc-50 p-4 rounded-lg border border-zinc-200 ml-0 md:ml-0 shadow-inner">
-                      <label className="block text-xs uppercase tracking-widest text-zinc-500 font-semibold mb-2">Your Reply</label>
+              {/* Message Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{selectedMessage.subject}</h3>
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                    {selectedMessage.message}
+                  </div>
+                </div>
+
+                {/* Inline Reply Area */}
+                <div className="mt-8 border-t border-gray-100 pt-6">
+                  <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <Send size={16} /> Reply to Guest
+                  </h4>
+                  {selectedMessage.status === 'replied' ? (
+                    <div className="bg-green-50 text-green-800 p-4 rounded-xl border border-green-100 text-sm flex items-center gap-2">
+                      <CheckCircle2 size={18} /> You have already replied to this inquiry.
+                    </div>
+                  ) : (
+                    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
                       <textarea
                         value={replyText}
                         onChange={(e) => setReplyText(e.target.value)}
-                        placeholder={`Type your reply to ${msg.firstName}...`}
-                        rows={4}
-                        disabled={isSendingReply}
-                        className="w-full bg-white border border-zinc-300 text-zinc-900 px-3 py-2 rounded focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none mb-3 text-sm disabled:opacity-50"
+                        placeholder={`Draft reply to ${selectedMessage.firstName}...`}
+                        className="w-full p-4 text-sm focus:outline-none resize-none min-h-[150px]"
                       />
-                      <div className="flex justify-end gap-2">
+                      <div className="bg-gray-50 p-3 border-t border-gray-200 flex justify-end">
                         <button
-                          onClick={() => setReplyingTo(null)}
-                          disabled={isSendingReply}
-                          className="px-4 py-2 text-sm text-zinc-600 hover:text-zinc-900 font-medium"
+                          onClick={() => handleReplySubmit(selectedMessage)}
+                          disabled={!replyText.trim() || isSendingReply}
+                          className="bg-primary text-primary-foreground px-6 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
                         >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => handleReplySubmit(msg)}
-                          disabled={isSendingReply || !replyText.trim()}
-                          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50"
-                        >
-                          {isSendingReply ? (
-                            <RefreshCw size={14} className="animate-spin" />
-                          ) : (
-                            <Send size={14} />
-                          )}
-                          Send Reply
+                          {isSendingReply ? 'Sending...' : 'Send Reply'} <Send size={14} />
                         </button>
                       </div>
                     </div>
                   )}
                 </div>
-              ))}
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50">
+              <Mail size={48} className="mb-4 text-gray-300" />
+              <p>Select a message to read</p>
             </div>
           )}
         </div>
+
       </div>
     </div>
   );

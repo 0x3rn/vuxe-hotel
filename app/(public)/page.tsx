@@ -6,8 +6,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { collection, getDocs, query, limit, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Utensils, MapPin, Sparkles, Heart, Star, X } from 'lucide-react';
+import { Utensils, MapPin, Sparkles, Heart, Star, X, Tag } from 'lucide-react';
 import StickyBookingBar from '@/components/StickyBookingBar';
+import MediaDisplay from '@/components/MediaDisplay';
+import { doc, getDoc } from 'firebase/firestore';
 
 type Room = {
   id: string;
@@ -24,6 +26,17 @@ type Experience = {
   description: string;
   imageUrl: string;
   order: number;
+};
+
+type Offer = {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl?: string;
+  mediaUrl?: string;
+  discountCode?: string;
+  order: number;
+  isActive: boolean;
 };
 
 type GalleryImage = {
@@ -66,11 +79,20 @@ export default function HomePage() {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loadingExperiences, setLoadingExperiences] = useState(true);
 
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [loadingOffers, setLoadingOffers] = useState(true);
+
   const [gallery, setGallery] = useState<GalleryImage[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(true);
 
   const [social, setSocial] = useState<SocialImage[]>([]);
   const [loadingSocial, setLoadingSocial] = useState(true);
+
+  const [settings, setSettings] = useState({
+    heroMediaUrl: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=1920&q=80',
+    heroHeadline: 'A Symphony of Luxury and Hospitality',
+    heroSubheadline: 'Discover a world of elegance and unparalled service in the hearth of paradise.',
+  });
 
   // Lightbox State
   const [lightbox, setLightbox] = useState<{ isOpen: boolean; src: string }>({ isOpen: false, src: '' });
@@ -113,6 +135,25 @@ export default function HomePage() {
       }
     };
 
+    const fetchOffers = async () => {
+      try {
+        // Fetch only active offers
+        const q = query(collection(db, "offers"));
+        const snapshot = await getDocs(q);
+        const activeOffers: Offer[] = [];
+        snapshot.forEach(doc => {
+          const data = { id: doc.id, ...doc.data() } as Offer;
+          if (data.isActive) activeOffers.push(data);
+        });
+        activeOffers.sort((a, b) => a.order - b.order);
+        setOffers(activeOffers.slice(0, 3)); // Only show top 3 on homepage
+      } catch (error) {
+        console.error("Error fetching offers:", error);
+      } finally {
+        setLoadingOffers(false);
+      }
+    };
+
     const fetchGallery = async () => {
       try {
         const q = query(collection(db, "gallery"), orderBy("order", "asc"), limit(8));
@@ -141,10 +182,24 @@ export default function HomePage() {
       }
     };
 
+    const fetchSettings = async () => {
+      try {
+        const docRef = doc(db, 'settings', 'global');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setSettings(prev => ({ ...prev, ...docSnap.data() }));
+        }
+      } catch (error) {
+        console.error("Error fetching settings:", error);
+      }
+    };
+
     fetchRooms();
     fetchExperiences();
+    fetchOffers();
     fetchGallery();
     fetchSocial();
+    fetchSettings();
   }, []);
 
   return (
@@ -153,14 +208,7 @@ export default function HomePage() {
       {/* 2. FULLSCREEN HERO */}
       <section className="relative h-[100dvh] w-full flex flex-col items-center justify-center pt-24 md:pt-0">
         <div className="absolute inset-0 z-0">
-          <Image 
-            src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80"
-            alt="Hero Background"
-            fill
-            priority
-            className="object-cover object-center"
-            sizes="100vw"
-          />
+          <MediaDisplay src={settings.heroMediaUrl} alt="Hero Background" fill />
           <div className="absolute inset-0 bg-black/40 z-10" />
         </div>
         
@@ -170,11 +218,11 @@ export default function HomePage() {
           variants={fadeInUp}
           className="relative z-10 text-center text-white space-y-8 max-w-4xl px-6"
         >
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif tracking-wide leading-tight">
-            A Symphony of Luxury and Hospitality
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif tracking-wide leading-tight drop-shadow-lg">
+            {settings.heroHeadline}
           </h1>
-          <p className="text-lg md:text-xl font-light text-zinc-200 max-w-2xl mx-auto">
-            Discover a world of elegance and unparalled service in the hearth of paradise.
+          <p className="text-lg md:text-xl font-light text-zinc-200 max-w-2xl mx-auto drop-shadow">
+            {settings.heroSubheadline}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-4">
             <Link href="/rooms" className="border border-white text-white px-8 py-4 rounded-full uppercase text-sm tracking-widest font-medium hover:bg-white hover:text-black transition-colors w-full sm:w-auto shadow-xl">
@@ -295,6 +343,47 @@ export default function HomePage() {
         )}
       </section>
 
+      {/* 5.5 SPECIAL OFFERS SECTION */}
+      {(!loadingOffers && offers.length > 0) && (
+        <section className="py-24 bg-zinc-900 text-white border-y border-zinc-800" id="offers">
+          <div className="container mx-auto px-6">
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-100px" }}
+              variants={fadeInUp}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl md:text-5xl font-serif mb-6 tracking-wide">Exclusive Offers</h2>
+              <p className="text-zinc-400 font-light text-lg">Elevate your experience with our curated seasonal privileges.</p>
+            </motion.div>
+            
+            <motion.div 
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-50px" }}
+              variants={staggerContainer}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            >
+              {offers.map((offer) => (
+                <motion.div key={offer.id} variants={fadeInUp} className="bg-zinc-800/50 rounded-xl overflow-hidden flex flex-col group border border-zinc-800 hover:border-zinc-600 transition-colors">
+                  <div className="relative h-64 overflow-hidden">
+                    <MediaDisplay src={offer.mediaUrl || offer.imageUrl || ''} alt={offer.title} fill />
+                  </div>
+                  <div className="p-8 flex-1 flex flex-col items-center text-center">
+                    <h3 className="text-2xl font-serif mb-4 text-amber-500/90">{offer.title}</h3>
+                    <p className="text-zinc-300 font-light text-sm mb-6 flex-1 line-clamp-3 leading-relaxed">{offer.description}</p>
+                    <Link href="/rooms" className="inline-block border-b border-zinc-500 pb-1 text-zinc-300 uppercase text-xs tracking-[0.2em] font-medium hover:text-white hover:border-white transition-colors mt-auto">
+                      Discover More
+                    </Link>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
+
       {/* 6. LIFESTYLE SHOWCASE SECTION */}
       <section className="relative h-[70vh] w-full flex items-center justify-center">
         <div className="absolute inset-0 z-0">
@@ -358,6 +447,8 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+
+
 
       {/* 8. GUEST EXPERIENCE SECTION (Dynamic) */}
       <section className="py-24 bg-stone-50 border-y border-stone-200">

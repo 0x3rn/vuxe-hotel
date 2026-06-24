@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import Link from 'next/link';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function PublicLayout({
   children,
@@ -10,10 +12,36 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [topOffer, setTopOffer] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchTopOffer = async () => {
+      try {
+        const q = query(
+          collection(db, "offers"), 
+          where("isActive", "==", true), 
+          where("showInTopBar", "==", true),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          setTopOffer(snap.docs[0].data());
+        }
+      } catch (e) {
+        console.error("Error fetching top offer", e);
+      }
+    };
+    fetchTopOffer();
+  }, []);
 
   return (
     <>
-      <header className="fixed w-full top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border">
+      <header className="fixed w-full top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border flex flex-col">
+        {topOffer && (
+          <div className="bg-zinc-950 text-amber-500 py-2 px-4 text-center text-xs tracking-[0.2em] uppercase font-medium border-b border-zinc-800">
+             {topOffer.title} — {topOffer.description} <Link href="/rooms" className="underline ml-2 hover:text-amber-400">Learn More</Link>
+          </div>
+        )}
         <div className="container mx-auto px-4 py-4 md:px-8 md:py-6 flex items-center justify-between">
           <div className="text-2xl font-serif font-bold text-primary tracking-wider z-50 relative">
             <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>LUXE</Link>
