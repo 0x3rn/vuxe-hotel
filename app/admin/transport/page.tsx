@@ -79,8 +79,8 @@ export default function AdminTransportPage() {
         body: JSON.stringify({
           type: 'transport',
           id: selectedReq.id,
-          status: finalStatus,
-          ...assignmentData
+          ...assignmentData,
+          status: finalStatus
         })
       });
       
