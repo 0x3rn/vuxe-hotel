@@ -77,7 +77,7 @@ export default function AdminGuestsPage() {
             totalSpend: spend,
             firstStay: b.checkInDate || b.checkIn,
             lastStay: isCompletedStay ? stayDateStr : undefined,
-            lastStayDateObj: isCompletedStay ? stayDateObj : undefined,
+            lastStayDateObj: isCompletedStay ? (stayDateObj || undefined) : undefined,
             lastStayFormatted: isCompletedStay ? stayDateStr : undefined
           });
         }
