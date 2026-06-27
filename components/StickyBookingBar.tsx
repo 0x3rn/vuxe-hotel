@@ -7,7 +7,7 @@ import { X } from 'lucide-react';
 
 export default function StickyBookingBar() {
   const router = useRouter();
-  const [isVisible, setIsVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Form State
@@ -26,8 +26,8 @@ export default function StickyBookingBar() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    // window.addEventListener('scroll', handleScroll, { passive: true });
+    // return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleCheckAvailability = () => {
@@ -66,7 +66,7 @@ export default function StickyBookingBar() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed bottom-0 left-0 w-full z-40 md:flex items-center justify-center pointer-events-none"
+            className="w-full z-40 md:flex items-center justify-center pointer-events-none"
           >
             {/* --- DESKTOP VIEW --- */}
             <div className="hidden md:flex items-center justify-between w-full max-w-4xl mx-auto px-6 py-2.5 mb-6 rounded-full backdrop-blur-xl bg-white/80 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-800 shadow-2xl pointer-events-auto">
@@ -125,7 +125,7 @@ export default function StickyBookingBar() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="md:hidden fixed bottom-6 right-6 z-40 pointer-events-auto"
+            className="md:hidden w-full flex justify-center z-40 pointer-events-auto"
           >
             <motion.button
               whileTap={{ scale: 0.95 }}

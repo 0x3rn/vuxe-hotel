@@ -232,6 +232,10 @@ export default function HomePage() {
         </motion.div>
       </section>
 
+      <div className="relative z-30 w-full flex justify-center pt-12 bg-white">
+        <StickyBookingBar />
+      </div>
+
       {/* 3. INTRODUCTION / STORY SECTION */}
       <section className="py-24 md:py-32 container mx-auto px-6">
         <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
@@ -704,7 +708,7 @@ export default function HomePage() {
         </motion.div>
       </section>
 
-      <StickyBookingBar />
+      {/* StickyBookingBar removed from here for screenshot */}
 
       {/* 14. GLOBAL LIGHTBOX */}
       <AnimatePresence>

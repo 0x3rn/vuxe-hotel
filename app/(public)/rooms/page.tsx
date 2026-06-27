@@ -76,6 +76,7 @@ function RoomsList() {
 
         roomsData.sort((a, b) => a.name.localeCompare(b.name));
         setRooms(roomsData);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching rooms:", error);
         setLoading(false);
