@@ -3,11 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { X } from 'lucide-react';
+import { X, ArrowRight } from 'lucide-react';
 
 export default function StickyBookingBar() {
   const router = useRouter();
-  const [isVisible, setIsVisible] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Form State
@@ -17,17 +17,17 @@ export default function StickyBookingBar() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Show bar after scrolling past 600px (roughly the Hero section height)
+      // Show floating elements after scrolling past 600px (roughly the Hero section height)
       if (window.scrollY > 600) {
-        setIsVisible(true);
+        setIsScrolled(true);
       } else {
-        setIsVisible(false);
-        setIsDrawerOpen(false); // Auto-close drawer if scrolled back to top
+        setIsScrolled(false);
       }
     };
 
-    // window.addEventListener('scroll', handleScroll, { passive: true });
-    // return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Check on mount
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleCheckAvailability = () => {
@@ -57,75 +57,105 @@ export default function StickyBookingBar() {
     return () => { document.body.style.overflow = ''; };
   }, [isDrawerOpen]);
 
+  // DESKTOP: Sleek horizontal bar
+  const renderDesktopForm = () => (
+    <div className="hidden md:flex items-center justify-between w-full max-w-4xl mx-auto px-6 py-2.5 mb-6 rounded-full backdrop-blur-xl bg-white/80 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-800 shadow-xl pointer-events-auto transition-all">
+      <div className="flex items-center gap-4 flex-1 pr-6 border-r border-zinc-200 dark:border-zinc-800">
+        <div className="flex-1">
+          <label className="block text-[9px] uppercase tracking-widest text-zinc-500 font-semibold mb-0.5">Check In</label>
+          <input 
+            type="date" 
+            value={checkIn}
+            onChange={(e) => setCheckIn(e.target.value)}
+            className="w-full bg-transparent text-xs font-medium focus:outline-none text-zinc-900 dark:text-zinc-100"
+          />
+        </div>
+        <div className="flex-1 border-l border-zinc-200 dark:border-zinc-800 pl-4">
+          <label className="block text-[9px] uppercase tracking-widest text-zinc-500 font-semibold mb-0.5">Check Out</label>
+          <input 
+            type="date" 
+            value={checkOut}
+            min={checkIn}
+            onChange={(e) => setCheckOut(e.target.value)}
+            className="w-full bg-transparent text-xs font-medium focus:outline-none text-zinc-900 dark:text-zinc-100"
+          />
+        </div>
+        <div className="flex-1 border-l border-zinc-200 dark:border-zinc-800 pl-4">
+          <label className="block text-[9px] uppercase tracking-widest text-zinc-500 font-semibold mb-0.5">Guests</label>
+          <select 
+            value={guests}
+            onChange={(e) => setGuests(e.target.value)}
+            className="w-full bg-transparent text-xs font-medium focus:outline-none text-zinc-900 dark:text-zinc-100 cursor-pointer"
+          >
+            {[1,2,3,4,5,6].map(num => (
+              <option key={num} value={num}>{num} Guest{num !== 1 ? 's' : ''}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="pl-6">
+        <button 
+          onClick={handleCheckAvailability}
+          className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full uppercase text-[10px] tracking-widest font-semibold hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/20 whitespace-nowrap"
+        >
+          Check Availability
+        </button>
+      </div>
+    </div>
+  );
+
+  // MOBILE: Compact trigger card that opens the bottom drawer
+  const renderMobileStaticCard = () => (
+    <div 
+      onClick={() => setIsDrawerOpen(true)}
+      className="md:hidden w-full max-w-sm mx-auto px-6 py-4 mb-6 rounded-2xl bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 shadow-xl flex items-center justify-between cursor-pointer active:scale-[0.98] transition-transform pointer-events-auto"
+    >
+      <div className="flex flex-col">
+        <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-semibold mb-1">Your Stay</span>
+        <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate max-w-[200px]">
+          {checkIn && checkOut ? `${checkIn} to ${checkOut}` : 'Select Dates'} • {guests} Guest{guests !== '1' ? 's' : ''}
+        </span>
+      </div>
+      <div className="bg-primary text-primary-foreground p-2.5 rounded-full shadow-sm">
+        <ArrowRight size={16} />
+      </div>
+    </div>
+  );
+
   return (
     <>
+      {/* 1. STATIC RESPONSIVE BAR (Always visible below Hero) */}
+      <div className="w-full z-30 px-4 md:px-0">
+        {renderDesktopForm()}
+        {renderMobileStaticCard()}
+      </div>
+
+      {/* 2. FLOATING DESKTOP BAR (Visible on scroll) */}
       <AnimatePresence>
-        {isVisible && (
+        {isScrolled && (
           <motion.div 
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="w-full z-40 md:flex items-center justify-center pointer-events-none"
+            className="fixed bottom-0 left-0 w-full z-40 hidden md:flex items-center justify-center pointer-events-none"
           >
-            {/* --- DESKTOP VIEW --- */}
-            <div className="hidden md:flex items-center justify-between w-full max-w-4xl mx-auto px-6 py-2.5 mb-6 rounded-full backdrop-blur-xl bg-white/80 dark:bg-zinc-950/80 border border-zinc-200 dark:border-zinc-800 shadow-2xl pointer-events-auto">
-              <div className="flex items-center gap-4 flex-1 pr-6 border-r border-zinc-200 dark:border-zinc-800">
-                <div className="flex-1">
-                  <label className="block text-[9px] uppercase tracking-widest text-zinc-500 font-semibold mb-0.5">Check In</label>
-                  <input 
-                    type="date" 
-                    value={checkIn}
-                    onChange={(e) => setCheckIn(e.target.value)}
-                    className="w-full bg-transparent text-xs font-medium focus:outline-none text-zinc-900 dark:text-zinc-100"
-                  />
-                </div>
-                <div className="flex-1 border-l border-zinc-200 dark:border-zinc-800 pl-4">
-                  <label className="block text-[9px] uppercase tracking-widest text-zinc-500 font-semibold mb-0.5">Check Out</label>
-                  <input 
-                    type="date" 
-                    value={checkOut}
-                    min={checkIn}
-                    onChange={(e) => setCheckOut(e.target.value)}
-                    className="w-full bg-transparent text-xs font-medium focus:outline-none text-zinc-900 dark:text-zinc-100"
-                  />
-                </div>
-                <div className="flex-1 border-l border-zinc-200 dark:border-zinc-800 pl-4">
-                  <label className="block text-[9px] uppercase tracking-widest text-zinc-500 font-semibold mb-0.5">Guests</label>
-                  <select 
-                    value={guests}
-                    onChange={(e) => setGuests(e.target.value)}
-                    className="w-full bg-transparent text-xs font-medium focus:outline-none text-zinc-900 dark:text-zinc-100 cursor-pointer"
-                  >
-                    {[1,2,3,4,5,6].map(num => (
-                      <option key={num} value={num}>{num} Guest{num !== 1 ? 's' : ''}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="pl-6">
-                <button 
-                  onClick={handleCheckAvailability}
-                  className="bg-primary text-primary-foreground px-6 py-2.5 rounded-full uppercase text-[10px] tracking-widest font-semibold hover:bg-primary/90 transition-all shadow-lg hover:shadow-primary/20 whitespace-nowrap"
-                >
-                  Check Availability
-                </button>
-              </div>
+            <div className="pointer-events-auto w-full max-w-4xl px-4 md:px-0">
+              {renderDesktopForm()}
             </div>
-
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* --- MOBILE PILL BUTTON --- */}
+      {/* 3. FLOATING MOBILE PILL BUTTON (Visible on scroll) */}
       <AnimatePresence>
-        {isVisible && !isDrawerOpen && (
+        {isScrolled && !isDrawerOpen && (
           <motion.div 
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="md:hidden w-full flex justify-center z-40 pointer-events-auto"
+            className="md:hidden fixed bottom-6 right-6 z-40 pointer-events-auto"
           >
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -138,10 +168,10 @@ export default function StickyBookingBar() {
         )}
       </AnimatePresence>
 
-      {/* --- MOBILE iOS-STYLE BOTTOM SHEET DRAWER --- */}
+      {/* 4. MOBILE DRAWER */}
       <AnimatePresence>
         {isDrawerOpen && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center md:hidden">
+          <div className="fixed inset-0 z-50 flex items-end justify-center md:hidden pointer-events-auto">
             {/* Dark Backdrop */}
             <motion.div 
               initial={{ opacity: 0 }}
@@ -157,7 +187,7 @@ export default function StickyBookingBar() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-full bg-white dark:bg-zinc-950 rounded-t-3xl p-6 shadow-2xl flex flex-col"
+              className="relative w-full bg-white dark:bg-zinc-950 rounded-t-3xl p-6 shadow-2xl flex flex-col max-h-[85vh] overflow-y-auto"
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={0.2}
@@ -166,7 +196,7 @@ export default function StickyBookingBar() {
               }}
             >
               {/* Drag Handle */}
-              <div className="w-full flex justify-center pb-6">
+              <div className="w-full flex justify-center pb-6 sticky top-0 bg-white dark:bg-zinc-950 z-10 pt-2">
                 <div className="w-12 h-1.5 bg-zinc-300 dark:bg-zinc-700 rounded-full" />
               </div>
 
